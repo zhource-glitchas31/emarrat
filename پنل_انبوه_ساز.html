@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل انبوه ساز</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F4F5F7; --surface:#FFFFFF; --surface-alt:#FAFBFC; --border:#E7E9EC; --border-soft:#EFF1F3;
+    --text:#181B20; --text-muted:#6B7280; --text-faint:#9AA1AC;
+    --primary:#1F5C4C; --primary-dark:#153F34; --primary-light:#E6F0EC;
+    --gold:#AD7C2B; --gold-light:#F8EFDD;
+    --danger:#B3392C; --danger-light:#FBEAE7;
+    --warning:#B07A1E; --warning-light:#FAF0DC;
+    --info:#2B5A82; --info-light:#E8F0F7;
+    --radius:16px; --radius-sm:10px;
+    --shadow-sm:0 1px 2px rgba(20,23,28,.05);
+    --shadow-md:0 10px 30px -14px rgba(20,23,28,.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  /* Safety net: any inline icon svg without an explicit sized wrapper falls back to a sane size
+     instead of the browser's default (which can render huge, unsized icons). More specific
+     rules elsewhere (.btn svg, .nav-item svg, etc.) still win over this. */
+  svg{width:18px;height:18px;flex-shrink:0;}
+  body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.7;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:#D7DBE0;border-radius:8px;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;}
+  input,textarea,select{font-family:inherit;font-size:13.5px;}
+
+  .app{display:flex;min-height:100vh;}
+
+  /* SIDEBAR */
+  .sidebar{width:250px;flex:0 0 250px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;}
+  .brand{padding:22px 20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border-soft);}
+  .brand-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(155deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;flex-shrink:0;}
+  .brand-name{font-weight:700;font-size:14.5px;color:var(--text);}
+  .brand-sub{font-size:11.5px;color:var(--text-faint);margin-top:1px;}
+
+  .nav{padding:14px 12px;display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text-muted);font-size:13.5px;font-weight:500;cursor:pointer;}
+  .nav-item svg{width:18px;height:18px;flex-shrink:0;}
+  .nav-item:hover{background:var(--surface-alt);color:var(--text);}
+  .nav-item.active{background:var(--primary-light);color:var(--primary-dark);font-weight:700;}
+  .nav-badge{margin-right:auto;background:var(--danger);color:#fff;font-size:10.5px;font-weight:700;border-radius:20px;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 5px;}
+  .nav-badge.muted{background:var(--gold);}
+
+  .sidebar-foot{padding:14px;border-top:1px solid var(--border-soft);display:flex;align-items:center;gap:10px;}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--gold-light);color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;flex-shrink:0;}
+  .sidebar-foot .name{font-size:12.5px;font-weight:700;}
+  .sidebar-foot .role{font-size:11px;color:var(--text-faint);}
+
+  /* MAIN */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{height:64px;flex:0 0 64px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:20;gap:14px;}
+  .page-title{font-size:16px;font-weight:700;}
+  .page-sub{font-size:12px;color:var(--text-faint);margin-top:1px;}
+  .topbar-right{display:flex;align-items:center;gap:12px;}
+  .icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--text-muted);position:relative;cursor:pointer;}
+  .icon-btn:hover{background:var(--surface-alt);}
+  .icon-btn svg{width:17px;height:17px;}
+  .dot-flag{position:absolute;top:-4px;left:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:20px;background:var(--danger);color:#fff;font-size:10.5px;font-weight:700;border:1.5px solid var(--surface);display:flex;align-items:center;justify-content:center;}
+
+  .content{padding:20px 26px 60px;flex:1;}
+
+  /* BREADCRUMB */
+  .breadcrumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;font-size:12.5px;color:var(--text-faint);}
+  .breadcrumb .bc-item{cursor:pointer;transition:color .12s;}
+  .breadcrumb .bc-item:hover{color:var(--primary-dark);}
+  .breadcrumb .bc-item.current{color:var(--text);font-weight:700;cursor:default;}
+
+  /* GENERIC */
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid transparent;white-space:nowrap;transition:all .12s;}
+  .btn svg{width:15px;height:15px;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-ghost{background:var(--surface);color:var(--text);border-color:var(--border);}
+  .btn-ghost:hover{background:var(--surface-alt);}
+  .btn-soft{background:var(--primary-light);color:var(--primary-dark);}
+  .btn-danger-soft{background:var(--danger-light);color:var(--danger);}
+  .btn-danger-soft:hover{background:#F5D5D0;}
+  .btn-sm{padding:6px 11px;font-size:12px;border-radius:8px;}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;line-height:1.4;}
+  .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .badge-active{background:var(--primary-light);color:var(--primary-dark);}
+  .badge-pending{background:var(--warning-light);color:var(--warning);}
+  .badge-rejected{background:var(--danger-light);color:var(--danger);}
+  .badge-revision{background:var(--gold-light);color:var(--gold);}
+  .badge-draft{background:#EEF0F2;color:var(--text-muted);}
+  .badge-done{background:var(--info-light);color:var(--info);}
+  .badge-clickable{cursor:pointer;transition:transform .1s;}
+  .badge-clickable:hover{transform:scale(1.04);}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:22px;overflow-x:auto;}
+  .tab{padding:11px 16px;font-size:13.5px;font-weight:600;color:var(--text-faint);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;}
+  .tab:hover{color:var(--text);}
+  .tab.active{color:var(--primary-dark);border-color:var(--primary);}
+  .tab .count{background:var(--surface-alt);color:var(--text-faint);font-size:11px;padding:1px 7px;border-radius:20px;margin-right:6px;}
+  .tab.active .count{background:var(--primary-light);color:var(--primary-dark);}
+
+  /* PROJECT CARDS */
+  .projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+  .p-card{overflow:hidden;transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column;cursor:pointer;}
+  .p-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+  .p-head{display:flex;gap:14px;padding:16px 16px 14px;align-items:flex-start;}
+  .p-thumb{width:104px;height:104px;border-radius:12px;flex-shrink:0;position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:8px;}
+  .p-thumb .thumb-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.28);}
+  .p-thumb .thumb-icon svg{width:40px;height:40px;}
+  .p-thumb .type-chip{position:relative;z-index:1;background:rgba(255,255,255,.94);color:var(--text);font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;}
+  .p-head-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;}
+  .p-status-pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;align-self:flex-start;line-height:1.5;}
+  .p-status-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .p-status-pill.is-active{background:var(--primary-light);color:var(--primary-dark);}
+  .p-status-pill.is-pending{background:var(--warning-light);color:var(--warning);}
+  .p-status-pill.is-revision{background:var(--gold-light);color:var(--gold);}
+  .p-status-pill.is-rejected{background:var(--danger-light);color:var(--danger);}
+  .p-status-pill.is-done{background:var(--info-light);color:var(--info);}
+  .p-status-pill.is-draft{background:#EEF0F2;color:var(--text-muted);}
+  .p-title{font-size:15px;font-weight:800;color:var(--text);line-height:1.5;}
+  .p-city{font-size:11.5px;color:var(--text-faint);display:flex;align-items:center;gap:5px;}
+  .p-city svg{width:12px;height:12px;flex-shrink:0;}
+  .p-stage-line{font-size:11.5px;color:var(--text-muted);display:flex;align-items:center;gap:6px;background:var(--surface-alt);border:1px solid var(--border-soft);padding:6px 10px;border-radius:9px;}
+  .p-stage-line svg{width:13px;height:13px;color:var(--primary);flex-shrink:0;}
+  .p-stage-line b{color:var(--text);font-weight:700;}
+  .p-budget-grid{display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface-alt);border-top:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft);}
+  .p-budget-col{padding:12px 6px;text-align:center;position:relative;}
+  .p-budget-col + .p-budget-col::before{content:'';position:absolute;right:0;top:14px;bottom:14px;width:1px;background:var(--border);}
+  .p-budget-label{font-size:10.5px;color:var(--text-faint);display:block;margin-bottom:5px;white-space:nowrap;}
+  .p-budget-val{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;}
+  .p-budget-val small{font-size:9.5px;font-weight:600;color:var(--text-faint);margin-right:2px;}
+  .p-budget-val.highlight{color:var(--primary-dark);}
+  .p-duration{padding:14px 16px 10px;}
+  .p-duration-row{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--text-muted);margin-bottom:8px;gap:8px;}
+  .p-duration-row b{color:var(--text);font-weight:700;}
+  .p-duration-row .p-pct{color:var(--primary-dark);font-weight:800;}
+  .p-duration .progress-track{margin:0;height:8px;}
+  .p-duration .progress-fill{background:linear-gradient(90deg,var(--primary),#3A8067);}
+  .p-foot{display:flex;gap:6px;padding:0 16px 16px;margin-top:auto;}
+  .p-foot .btn{justify-content:center;padding:8px 10px;font-size:12px;}
+  .p-foot .p-btn-view{flex:0 0 30%;}
+  .p-foot .p-btn-edit{flex:0 0 70%;}
+  .p-btn-dark{background:var(--primary-dark);color:#fff;border-color:var(--primary-dark);}
+  .p-btn-dark:hover{background:#0D2A22;}
+  .p-btn-gold{background:var(--gold);color:#fff;border-color:var(--gold);}
+  .p-btn-gold:hover{background:#8F6520;}
+
+  .progress-track{height:6px;background:var(--border-soft);border-radius:20px;overflow:hidden;margin:10px 0 12px;}
+  .progress-fill{height:100%;border-radius:20px;background:var(--primary);}
+
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap;}
+  .section-title{font-size:15.5px;font-weight:700;}
+  .section-desc{font-size:12px;color:var(--text-faint);margin-top:2px;}
+
+  table.dt{width:100%;border-collapse:collapse;font-size:13px;}
+  table.dt th{text-align:right;font-size:11.5px;color:var(--text-faint);font-weight:600;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface-alt);}
+  table.dt td{padding:13px 14px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
+  table.dt tr:last-child td{border-bottom:none;}
+  table.dt tr:hover td{background:var(--surface-alt);}
+
+  /* DOC CARDS */
+  .doc-card{border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;}
+  .doc-card.rev{border-color:#EEDDB6;background:#FEFBF3;}
+  .doc-card.missing{border-style:dashed;background:var(--surface-alt);}
+  .doc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .doc-icon{width:34px;height:34px;border-radius:9px;background:var(--info-light);color:var(--info);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .doc-icon svg{width:16px;height:16px;}
+  .doc-name{font-weight:700;font-size:13px;}
+  .doc-meta{font-size:11.5px;color:var(--text-faint);}
+  .doc-actions{display:flex;gap:6px;margin-top:6px;}
+
+  /* IDENTITY CARDS */
+  .identity-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media (max-width:820px){.identity-grid{grid-template-columns:1fr;}}
+  .id-card{padding:18px;position:relative;overflow:hidden;}
+  .id-card-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .id-card-icon{width:38px;height:38px;border-radius:10px;background:var(--primary-light);color:var(--primary-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .id-card-icon svg{width:19px;height:19px;}
+  .id-card-titles{min-width:0;}
+  .id-card-title{font-weight:800;font-size:13.5px;}
+  .id-card-sub{font-size:11.5px;color:var(--text-faint);margin-top:1px;}
+  .id-card-head .badge{margin-right:auto;flex-shrink:0;}
+  .id-card-body{display:grid;gap:12px;}
+  .id-card-locked .id-card-inner{filter:blur(5px);opacity:.55;pointer-events:none;user-select:none;}
+  .id-card-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;background:linear-gradient(180deg, rgba(255,255,255,.25), rgba(255,255,255,.82));}
+  .add-fab{width:46px;height:46px;border-radius:50%;background:var(--primary);color:#fff;border:none;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-md);transition:background .12s,transform .12s;}
+  .add-fab svg{width:20px;height:20px;}
+  .add-fab:hover{background:var(--primary-dark);transform:scale(1.05);}
+  .id-card-overlay-title{font-size:13px;font-weight:800;color:var(--text);}
+  .id-card-overlay-text{font-size:11.5px;color:var(--text-muted);max-width:230px;line-height:1.9;}
+
+  /* LEGAL TEASER (company info tab) */
+  .legal-teaser{position:relative;border-radius:var(--radius-sm);overflow:hidden;}
+  .legal-teaser .legal-teaser-inner{filter:blur(5px);opacity:.5;pointer-events:none;user-select:none;}
+  .legal-teaser-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:28px 20px;background:linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.85));}
+  .legal-teaser-overlay .id-card-icon{width:52px;height:52px;}
+  .legal-teaser-overlay .id-card-icon svg{width:24px;height:24px;}
+  .legal-teaser-title{font-size:14.5px;font-weight:800;color:var(--text);}
+  .legal-teaser-text{font-size:12.5px;color:var(--text-muted);max-width:340px;line-height:1.9;}
+
+  .timeline{position:relative;padding-right:26px;}
+  .timeline::before{content:'';position:absolute;right:9px;top:4px;bottom:4px;width:2px;background:var(--border);}
+  .t-item{position:relative;padding-bottom:22px;}
+  .t-item:last-child{padding-bottom:0;}
+  .t-dot{position:absolute;right:-26px;top:2px;width:20px;height:20px;border-radius:50%;background:var(--primary-light);border:2px solid var(--surface);display:flex;align-items:center;justify-content:center;color:var(--primary-dark);}
+  .t-dot svg{width:10px;height:10px;}
+  .t-dot.pending{background:var(--warning-light);color:var(--warning);}
+  .t-title{font-size:13px;font-weight:700;}
+  .t-desc{font-size:12px;color:var(--text-faint);margin-top:2px;}
+  .t-time{font-size:11px;color:var(--text-faint);margin-top:4px;}
+
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field.full{grid-column:1/-1;}
+  .field label{font-size:12.5px;font-weight:600;color:var(--text-muted);}
+  .field input,.field select,.field textarea{border:1px solid var(--border);border-radius:9px;padding:10px 12px;background:var(--surface);color:var(--text);outline:none;transition:border-color .12s;}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);}
+  .field input:disabled,.field input[readonly]{background:var(--surface-alt);color:var(--text-muted);cursor:not-allowed;}
+  .field .hint{font-size:11px;color:var(--text-faint);}
+  .upload-box{border:1.5px dashed var(--border);border-radius:12px;padding:22px;text-align:center;color:var(--text-faint);font-size:12.5px;background:var(--surface-alt);cursor:pointer;}
+  .upload-box svg{width:22px;height:22px;margin-bottom:8px;color:var(--text-faint);}
+
+  /* MODAL */
+  .overlay{position:fixed;inset:0;background:rgba(15,17,21,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .modal{background:var(--surface);border-radius:18px;width:100%;max-width:760px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 30px 60px -20px rgba(0,0,0,.35);}
+  .modal.narrow{max-width:520px;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0;}
+  .modal-title{font-size:15px;font-weight:700;}
+  .modal-close{width:30px;height:30px;border-radius:9px;border:1px solid var(--border);background:var(--surface-alt);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .modal-close svg{width:14px;height:14px;}
+  .modal-body{padding:22px;overflow-y:auto;}
+  .modal-foot{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-top:1px solid var(--border);flex-shrink:0;gap:10px;}
+
+  .stepper{display:flex;align-items:center;padding:0 22px;padding-top:16px;}
+  .step{display:flex;align-items:center;gap:8px;flex:1;}
+  .step-circle{width:26px;height:26px;border-radius:50%;background:var(--surface-alt);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:var(--text-faint);flex-shrink:0;}
+  .step.done .step-circle{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .step.current .step-circle{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;}
+  .step-label{font-size:12px;font-weight:600;color:var(--text-faint);white-space:nowrap;}
+  .step.done .step-label,.step.current .step-label{color:var(--text);}
+  .step-line{flex:1;height:1.5px;background:var(--border);margin:0 6px;}
+
+  .empty{text-align:center;padding:50px 20px;color:var(--text-faint);}
+  .empty svg{width:34px;height:34px;margin-bottom:10px;color:var(--border);}
+  .empty .t{font-size:13.5px;font-weight:700;color:var(--text-muted);margin-bottom:3px;}
+
+  .notif-item{display:flex;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border-soft);cursor:pointer;}
+  .notif-item:last-child{border-bottom:none;}
+  .notif-item.unread{background:var(--surface-alt);}
+  .notif-item:hover{background:#F1F3F5;}
+  .notif-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .notif-icon svg{width:16px;height:16px;}
+  .notif-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .notif-title .unread-dot{width:7px;height:7px;border-radius:50%;background:var(--danger);}
+  .notif-desc{font-size:12px;color:var(--text-faint);margin-top:2px;}
+  .notif-time{font-size:11px;color:var(--text-faint);white-space:nowrap;}
+
+  .acct-tabs{display:flex;flex-direction:column;gap:2px;width:190px;flex-shrink:0;}
+  .acct-tab{padding:11px 14px;border-radius:10px;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;}
+  .acct-tab:hover{background:var(--surface-alt);}
+  .acct-tab.active{background:var(--primary-light);color:var(--primary-dark);}
+  .acct-layout{display:flex;gap:24px;align-items:flex-start;}
+  .kv-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-soft);font-size:13px;gap:12px;}
+  .kv-row .k{color:var(--text-faint);}
+  .kv-row .v{font-weight:600;text-align:left;}
+
+  /* CHART */
+  .chart-wrap{width:100%;overflow-x:auto;}
+  .chart-legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);margin-top:12px;}
+  .chart-legend .lg-item{display:flex;align-items:center;gap:6px;}
+  .chart-legend .lg-dot{width:10px;height:10px;border-radius:3px;}
+
+  .bank-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+  .bank-card{border-radius:16px;padding:18px 20px;color:#fff;min-height:120px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;}
+  .bank-card::after{content:'';position:absolute;left:-30px;bottom:-30px;width:130px;height:130px;background:rgba(255,255,255,.08);border-radius:50%;}
+  .bank-card .bc-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;position:relative;z-index:1;}
+  .bank-card .bc-top svg{width:20px;height:20px;opacity:.9;}
+  .bank-card .bc-number{font-size:16px;letter-spacing:1px;font-weight:700;margin:16px 0 8px;direction:ltr;text-align:right;position:relative;z-index:1;}
+  .bank-card .bc-bottom{display:flex;justify-content:space-between;align-items:flex-end;font-size:11px;opacity:.92;position:relative;z-index:1;}
+  .bank-card .bc-del{position:absolute;top:10px;left:10px;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;z-index:2;opacity:0;transition:opacity .12s;}
+  .bank-card:hover .bc-del{opacity:1;}
+  .bank-card .bc-del svg{width:13px;height:13px;}
+
+  .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .gallery-item{height:80px;border-radius:10px;position:relative;overflow:hidden;}
+  .gallery-item.cover{outline:3px solid var(--gold);outline-offset:-3px;}
+  .gallery-item .gi-label{position:absolute;top:6px;right:6px;background:var(--gold);color:#fff;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;}
+  .gallery-item .gi-del{position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:7px;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .12s;}
+  .gallery-item:hover .gi-del{opacity:1;}
+  .gallery-item .gi-del svg{width:11px;height:11px;}
+  .gallery-item .gi-setcover{position:absolute;bottom:4px;right:4px;background:rgba(255,255,255,.92);color:var(--text);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;cursor:pointer;opacity:0;transition:opacity .12s;}
+  .gallery-item:hover .gi-setcover{opacity:1;}
+
+  /* PAGINATION */
+  .pager{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:20px;flex-wrap:wrap;}
+  .pager button{min-width:34px;height:34px;padding:0 10px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;}
+  .pager button:hover:not(:disabled){background:var(--surface-alt);color:var(--text);}
+  .pager button.active{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;}
+  .pager button:disabled{opacity:.45;cursor:not-allowed;}
+  .pager .pager-info{font-size:12px;color:var(--text-faint);margin:0 8px;}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1A1E24;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 12px 32px -8px rgba(0,0,0,.4);z-index:200;opacity:0;transition:all .25s;max-width:420px;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast svg{width:16px;height:16px;flex-shrink:0;}
+  .toast.toast-success svg{color:#6BD5A7;}
+  .toast.toast-error{background:#5A1A14;}
+  .toast.toast-error svg{color:#FFB8AC;}
+  .toast.toast-info{background:#153A56;}
+  .toast.toast-info svg{color:#9BCBF0;}
+
+  /* CONFIRM */
+  .confirm-modal{background:var(--surface);border-radius:18px;width:100%;max-width:440px;padding:24px;box-shadow:0 30px 60px -20px rgba(0,0,0,.35);}
+  .confirm-icon{width:48px;height:48px;border-radius:14px;background:var(--danger-light);color:var(--danger);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+  .confirm-icon svg{width:22px;height:22px;}
+  .confirm-title{font-size:15px;font-weight:800;margin-bottom:6px;}
+  .confirm-msg{font-size:13px;color:var(--text-muted);line-height:1.8;margin-bottom:20px;}
+  .confirm-actions{display:flex;gap:8px;justify-content:flex-end;}
+
+  /* EXPERT COMMENT */
+  .expert-box{background:var(--gold-light);border:1px solid #EEDDB6;border-radius:12px;padding:14px 16px;margin-top:6px;}
+  .expert-box .ex-title{font-size:12.5px;font-weight:800;color:var(--gold);display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+  .expert-box .ex-title svg{width:14px;height:14px;}
+  .expert-box .ex-text{font-size:13px;color:var(--text);line-height:1.9;}
+  .expert-box .ex-meta{font-size:11px;color:var(--text-faint);margin-top:8px;padding-top:8px;border-top:1px dashed #EEDDB6;}
+
+  @media(max-width:1100px){
+    .form-grid{grid-template-columns:1fr;}
+    .acct-layout{flex-direction:column;}
+    .acct-tabs{flex-direction:row;width:100%;overflow-x:auto;}
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+/* ============== ICONS ============== */
+const I = {
+  building:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16"/><path d="M2 21h20"/><path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg>`,
+  coin:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2c0-1 1-1.7 2.5-1.7s2.5.8 2.5 1.7-1 1.4-2.5 1.8-2.5.9-2.5 1.8 1 1.7 2.5 1.7 2.5-.7 2.5-1.7"/></svg>`,
+  wallet:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3"/><path d="M3 7v11a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-4a2.5 2.5 0 0 0 0 5h5"/></svg>`,
+  chart:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>`,
+  chat:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
+  bell:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>`,
+  user:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
+  plus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>`,
+  pin:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>`,
+  chevDown:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`,
+  chevLeft:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>`,
+  chevRight:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`,
+  x:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`,
+  check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
+  clock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
+  file:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>`,
+  upload:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>`,
+  eye:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  edit:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`,
+  trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>`,
+  history:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l4 2"/></svg>`,
+  shield:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  map:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 20-5.5 2V6L9 4l6 2 5.5-2v16L15 22l-6-2Z"/><path d="M9 4v16M15 6v16"/></svg>`,
+  layers:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/></svg>`,
+  info:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>`,
+  card:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>`,
+  bank:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 3l9 7"/><path d="M4 10v10M9 10v10M15 10v10M20 10v10"/><path d="M2 20h20"/></svg>`,
+  warn:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>`,
+  camera:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
+  send:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>`,
+};
+
+/* ============== DATA ============== */
+const PROJECT_TYPES = {res:'مسکونی', com:'تجاری', off:'اداری', mix:'مسکونی مختلط'};
+const STATUS_META = {
+  draft:{label:'پیش‌نویس', cls:'badge-draft'},
+  pending:{label:'در انتظار تایید', cls:'badge-pending'},
+  active:{label:'فعال', cls:'badge-active'},
+  revision:{label:'نیازمند اصلاح', cls:'badge-revision'},
+  done:{label:'تکمیل شده', cls:'badge-done'},
+  rejected:{label:'رد شده', cls:'badge-rejected'},
+};
+
+const DOC_CATEGORIES = [
+  {cat:'مدارک مالکیت', required:true},
+  {cat:'مجوزها', required:true},
+  {cat:'نقشه‌های معماری', required:true},
+  {cat:'نقشه‌های سازه', required:true},
+  {cat:'قراردادهای اجرایی', required:false},
+  {cat:'ضمانت‌نامه‌ها', required:false},
+  {cat:'سایر مدارک', required:false},
+];
+
+/* مراحل استاندارد گزارش پیشرفت */
+const REPORT_STAGES = [
+  'خرید زمین',
+  'طراحی و مجوزها',
+  'تجهیز کارگاه',
+  'عملیات خاکی و گود برداری',
+  'فونداسیون و اجرای سازه',
+  'سفت کاری',
+  'نازک کاری',
+  'تاسیسات',
+  'نما و محوطه سازی',
+  'راه اندازی و تحویل',
+  'پیش فروش و فروش',
+];
+
+const PROJECTS = [
+  {
+    id:'p1', name:'برج مروارید لاهیجان', city:'لاهیجان، گیلان', type:'res', status:'active',
+    cover:'linear-gradient(135deg,#1F5C4C,#3A8067)', currentStage:'اسکلت', progress:46,
+    raised:18200, totalCapital:40000, sold:4550, totalTokens:10000, tokenPrice:4000000,
+    created:'۱۴۰۳/۰۲/۱۴', minBuy:2, maxBuy:500, saleStart:'۱۴۰۳/۰۲/۲۰', saleEnd:'۱۴۰۳/۰۹/۰۱',
+    desc:'مجتمع مسکونی ۱۲ طبقه با ۸۴ واحد در منطقه ساحلی لاهیجان، با متراژهای ۹۵ تا ۱۸۰ متر و امکانات کامل رفاهی شامل استخر، سالن ورزشی و پارکینگ اختصاصی.',
+    tech:{land:'۲,۴۰۰ متر مربع', building:'۱۸,۶۰۰ متر مربع', floors:'۱۲', units:'۸۴', parking:'۹۶', usage:'مسکونی', start:'۱۴۰۲/۰۹/۰۱', duration:'۲۲ ماه', delivery:'۱۴۰۴/۰۷/۰۱'},
+    stages:[
+      {t:'خرید زمین', status:'done', weight:5, start:'۱۴۰۲/۰۹/۰۱', end:'۱۴۰۲/۰۹/۲۰', report:'سند زمین به نام شرکت ثبت و مالکیت قطعی گردید.'},
+      {t:'اخذ مجوز', status:'done', weight:8, start:'۱۴۰۲/۰۹/۲۵', end:'۱۴۰۲/۱۱/۱۰', report:'پروانه ساخت از شهرداری لاهیجان دریافت شد.'},
+      {t:'گودبرداری', status:'done', weight:10, start:'۱۴۰۲/۱۱/۱۵', end:'۱۴۰۲/۱۲/۲۰', report:'عملیات گودبرداری کامل و پایدارسازی گود انجام شد.'},
+      {t:'فونداسیون', status:'done', weight:15, start:'۱۴۰۳/۰۱/۰۵', end:'۱۴۰۳/۰۲/۲۵', report:'فونداسیون کامل بتن‌ریزی و آزمایش مغزه‌گیری تایید شد.'},
+      {t:'اسکلت', status:'active', weight:25, start:'۱۴۰۳/۰۳/۰۱', end:'۱۴۰۳/۰۷/۱۵', report:'تا طبقه هفتم اسکلت بتنی اجرا شده؛ گزارش پیشرفت این هفته در انتظار بررسی کارشناس است.'},
+      {t:'سفت‌کاری', status:'draft', weight:20, start:'—', end:'—', report:''},
+      {t:'نازک‌کاری', status:'draft', weight:12, start:'—', end:'—', report:''},
+      {t:'تحویل', status:'draft', weight:5, start:'—', end:'—', report:''},
+    ],
+    gallery:[{gradient:'linear-gradient(135deg,#1F5C4C,#3A8067)',isCover:true},{gradient:'linear-gradient(135deg,#153F34,#2B6B58)',isCover:false},{gradient:'linear-gradient(135deg,#3A8067,#5FA588)',isCover:false},{gradient:'linear-gradient(135deg,#1F5C4C,#6BBF9D)',isCover:false}],
+    docs:[
+      {cat:'مدارک مالکیت', name:'سند تک‌برگ زمین', date:'۱۴۰۲/۰۸/۲۰', status:'approved'},
+      {cat:'مجوزها', name:'پروانه ساخت شهرداری', date:'۱۴۰۲/۱۱/۰۵', status:'approved'},
+      {cat:'نقشه‌های معماری', name:'نقشه‌های معماری کامل', date:'۱۴۰۲/۱۰/۱۱', status:'approved'},
+      {cat:'نقشه‌های سازه', name:'محاسبات و نقشه سازه', date:'۱۴۰۲/۱۰/۱۸', status:'approved'},
+      {cat:'قراردادهای اجرایی', name:'قرارداد پیمانکار اسکلت', date:'۱۴۰۳/۰۲/۲۸', status:'pending'},
+      {cat:'ضمانت‌نامه‌ها', name:'ضمانت‌نامه حسن انجام کار', date:'۱۴۰۳/۰۳/۰۲', status:'revision',
+        expertComment:'ضمانت‌نامه ارسالی فاقد مهر و امضای معتبر بانک صادرکننده است. لطفاً نسخه اصلی اسکن‌شده با مهر برجسته بانک را مجدداً ارسال نمایید. همچنین تاریخ اعتبار ضمانت‌نامه باید حداقل تا پایان مرحله سفت‌کاری باشد.'},
+    ]
+  },
+  {
+    id:'p2', name:'مجتمع تجاری اداری ونداد', city:'تهران، ونک', type:'com', status:'pending',
+    cover:'linear-gradient(135deg,#2B5A82,#4C7EA8)', currentStage:'اخذ مجوز', progress:8,
+    raised:0, totalCapital:65000, sold:0, totalTokens:13000, tokenPrice:5000000,
+    created:'۱۴۰۳/۰۵/۰۲', minBuy:1, maxBuy:300, saleStart:'—', saleEnd:'—',
+    desc:'برج تجاری-اداری ۱۸ طبقه با دسترسی مستقیم به بزرگراه، شامل ۶ طبقه تجاری و ۱۲ طبقه اداری با نمای شیشه‌ای دوجداره.',
+    tech:{land:'۱,۸۰۰ متر مربع', building:'۲۶,۰۰۰ متر مربع', floors:'۱۸', units:'۶۰', parking:'۱۴۰', usage:'تجاری/اداری', start:'در انتظار مجوز', duration:'۳۰ ماه (تخمینی)', delivery:'۱۴۰۶/۰۲/۰۱'},
+    stages:[
+      {t:'خرید زمین', status:'done', weight:6, start:'۱۴۰۳/۰۲/۱۰', end:'۱۴۰۳/۰۳/۰۱', report:'زمین با سند تجاری خریداری و ثبت شد.'},
+      {t:'اخذ مجوز', status:'active', weight:9, start:'۱۴۰۳/۰۳/۰۵', end:'۱۴۰۳/۰۷/۰۱', report:'پرونده در کمیسیون ماده پنج شهرداری در حال بررسی است.'},
+    ],
+    gallery:[{gradient:'linear-gradient(135deg,#2B5A82,#4C7EA8)',isCover:true},{gradient:'linear-gradient(135deg,#173A54,#3A6E96)',isCover:false}],
+    docs:[
+      {cat:'مدارک مالکیت', name:'سند مالکیت زمین تجاری', date:'۱۴۰۳/۰۳/۰۲', status:'approved'},
+      {cat:'مجوزها', name:'استعلام کمیسیون ماده پنج', date:'۱۴۰۳/۰۵/۰۱', status:'pending'},
+      {cat:'نقشه‌های معماری', name:'نقشه‌های اولیه معماری', date:'۱۴۰۳/۰۴/۲۰', status:'pending'},
+    ]
+  },
+  {
+    id:'p3', name:'شهرک نگین کیش', city:'کیش، هرمزگان', type:'mix', status:'revision',
+    cover:'linear-gradient(135deg,#AD7C2B,#D3A854)', currentStage:'فونداسیون', progress:22,
+    raised:6100, totalCapital:28000, sold:1220, totalTokens:7000, tokenPrice:4000000,
+    created:'۱۴۰۲/۱۱/۱۹', minBuy:2, maxBuy:400, saleStart:'۱۴۰۲/۱۲/۰۱', saleEnd:'۱۴۰۳/۰۸/۰۱',
+    desc:'مجموعه ویلایی-آپارتمانی ساحلی در جزیره کیش با ۴۰ واحد و دسترسی به ساحل اختصاصی.',
+    tech:{land:'۳,۱۰۰ متر مربع', building:'۹,۸۰۰ متر مربع', floors:'۴', units:'۴۰', parking:'۵۰', usage:'مسکونی مختلط', start:'۱۴۰۲/۱۲/۱۰', duration:'۱۸ ماه', delivery:'۱۴۰۴/۰۶/۱۰'},
+    stages:[
+      {t:'خرید زمین', status:'done', weight:7, start:'۱۴۰۲/۱۰/۰۱', end:'۱۴۰۲/۱۰/۲۰', report:'زمین ساحلی خریداری شد.'},
+      {t:'اخذ مجوز', status:'done', weight:9, start:'۱۴۰۲/۱۰/۲۵', end:'۱۴۰۲/۱۲/۰۵', report:'مجوز از سازمان منطقه آزاد کیش اخذ شد.'},
+      {t:'گودبرداری', status:'done', weight:11, start:'۱۴۰۲/۱۲/۱۰', end:'۱۴۰۳/۰۱/۱۵', report:'گودبرداری کامل انجام شد.'},
+      {t:'فونداسیون', status:'active', weight:16, start:'۱۴۰۳/۰۱/۲۰', end:'۱۴۰۳/۰۴/۱۰', report:'مدارک ضمانت‌نامه این مرحله توسط کارشناس رد شد و نیاز به اصلاح دارد.'},
+    ],
+    gallery:[{gradient:'linear-gradient(135deg,#AD7C2B,#D3A854)',isCover:true},{gradient:'linear-gradient(135deg,#7C581D,#AD7C2B)',isCover:false},{gradient:'linear-gradient(135deg,#D3A854,#E5C478)',isCover:false}],
+    docs:[
+      {cat:'مدارک مالکیت', name:'سند مالکیت ساحلی', date:'۱۴۰۲/۱۰/۲۲', status:'approved'},
+      {cat:'ضمانت‌نامه‌ها', name:'ضمانت‌نامه بانکی مرحله فونداسیون', date:'۱۴۰۳/۰۱/۲۵', status:'revision',
+        expertComment:'مبلغ ضمانت‌نامه با مبلغ مندرج در قرارداد پیمانکار مطابقت ندارد. مبلغ ضمانت‌نامه باید حداقل ۲۰٪ مبلغ قرارداد باشد. لطفاً ضمانت‌نامه اصلاح‌شده با مبلغ صحیح را ارسال نمایید.'},
+      {cat:'قراردادهای اجرایی', name:'قرارداد پیمانکار فونداسیون', date:'۱۴۰۳/۰۱/۲۸', status:'revision',
+        expertComment:'در متن قرارداد، مدت زمان اجرا ذکر نشده و همچنین ضمانت‌نامه حسن انجام کار قید نشده است. لطفاً قرارداد بازنگری‌شده را با درج این موارد ارسال نمایید.'},
+    ]
+  },
+  {
+    id:'p4', name:'برج اداری آرکا اصفهان', city:'اصفهان', type:'off', status:'done',
+    cover:'linear-gradient(135deg,#153F34,#1F5C4C)', currentStage:'تحویل', progress:100,
+    raised:52000, totalCapital:52000, sold:10400, totalTokens:10400, tokenPrice:5000000,
+    created:'۱۴۰۱/۰۶/۱۰', minBuy:1, maxBuy:600, saleStart:'۱۴۰۱/۰۷/۰۱', saleEnd:'۱۴۰۲/۰۲/۰۱',
+    desc:'برج اداری کلاس A در محور چهارباغ اصفهان با ۱۴ طبقه دفتر کار و لابی مدرن، پروژه با موفقیت تکمیل و تحویل داده شد.',
+    tech:{land:'۱,۲۰۰ متر مربع', building:'۱۴,۵۰۰ متر مربع', floors:'۱۴', units:'۵۶', parking:'۸۰', usage:'اداری', start:'۱۴۰۱/۰۷/۱۵', duration:'۲۴ ماه', delivery:'۱۴۰۳/۰۷/۱۵'},
+    stages:[
+      {t:'خرید زمین', status:'done', weight:5, start:'۱۴۰۱/۰۵/۰۱', end:'۱۴۰۱/۰۵/۲۰', report:'انجام شد.'},
+      {t:'اخذ مجوز', status:'done', weight:8, start:'۱۴۰۱/۰۵/۲۵', end:'۱۴۰۱/۰۷/۱۰', report:'انجام شد.'},
+      {t:'گودبرداری', status:'done', weight:10, start:'۱۴۰۱/۰۷/۱۵', end:'۱۴۰۱/۰۸/۲۰', report:'انجام شد.'},
+      {t:'فونداسیون', status:'done', weight:15, start:'۱۴۰۱/۰۸/۲۵', end:'۱۴۰۱/۱۰/۱۵', report:'انجام شد.'},
+      {t:'اسکلت', status:'done', weight:25, start:'۱۴۰۱/۱۰/۲۰', end:'۱۴۰۲/۰۳/۰۱', report:'انجام شد.'},
+      {t:'سفت‌کاری', status:'done', weight:20, start:'۱۴۰۲/۰۳/۰۵', end:'۱۴۰۲/۰۸/۱۵', report:'انجام شد.'},
+      {t:'نازک‌کاری', status:'done', weight:12, start:'۱۴۰۲/۰۸/۲۰', end:'۱۴۰۳/۰۵/۰۱', report:'انجام شد.'},
+      {t:'تحویل', status:'done', weight:5, start:'۱۴۰۳/۰۵/۰۵', end:'۱۴۰۳/۰۷/۱۵', report:'تحویل نهایی به سرمایه‌گذاران و بستن پروژه.'},
+    ],
+    gallery:[{gradient:'linear-gradient(135deg,#153F34,#1F5C4C)',isCover:true},{gradient:'linear-gradient(135deg,#0D2A22,#153F34)',isCover:false},{gradient:'linear-gradient(135deg,#1F5C4C,#3A8067)',isCover:false},{gradient:'linear-gradient(135deg,#2B6B58,#4C9070)',isCover:false}],
+    docs:[
+      {cat:'مدارک مالکیت', name:'سند نهایی تفکیکی', date:'۱۴۰۳/۰۷/۱۰', status:'approved'},
+      {cat:'سایر مدارک', name:'گواهی پایان کار', date:'۱۴۰۳/۰۶/۲۰', status:'approved'},
+    ]
+  },
+  {
+    id:'p5', name:'مجتمع مسکونی باران شمال', city:'رشت', type:'res', status:'draft',
+    cover:'linear-gradient(135deg,#6B7280,#9AA1AC)', currentStage:'—', progress:0,
+    raised:0, totalCapital:31000, sold:0, totalTokens:7750, tokenPrice:4000000,
+    created:'۱۴۰۳/۰۶/۳۰', minBuy:2, maxBuy:400, saleStart:'—', saleEnd:'—',
+    desc:'پیش‌نویس پروژه مجتمع مسکونی ۶ طبقه در رشت؛ اطلاعات فنی و مالی هنوز تکمیل و برای بررسی ارسال نشده است.',
+    tech:{land:'۱,۵۰۰ متر مربع', building:'۷,۲۰۰ متر مربع', floors:'۶', units:'۳۶', parking:'۴۰', usage:'مسکونی', start:'تعیین نشده', duration:'—', delivery:'—'},
+    stages:[],
+    gallery:[],
+    docs:[]
+  },
+];
+
+const STATUS_TABS = [
+  {k:'all', l:'همه پروژه‌ها'},
+  {k:'active', l:'فعال'},
+  {k:'pending', l:'در انتظار تایید'},
+  {k:'revision', l:'نیازمند اصلاح'},
+];
+
+const FIN_REQUESTS = [
+  {id:'f1', projectId:'p1', stage:'اسکلت', amount:'۲,۸۰۰,۰۰۰,۰۰۰', reason:'تسویه صورت‌وضعیت پیمانکار اسکلت', date:'۱۴۰۳/۰۶/۱۰', step:2, status:'pending'},
+  {id:'f2', projectId:'p3', stage:'فونداسیون', amount:'۹۵۰,۰۰۰,۰۰۰', reason:'خرید میلگرد و بتن مرحله فونداسیون', date:'۱۴۰۳/۰۵/۲۸', step:1, status:'rejected', note:'فاکتور خرید ناقص است.'},
+  {id:'f3', projectId:'p1', stage:'فونداسیون', amount:'۱,۹۰۰,۰۰۰,۰۰۰', reason:'تسویه نهایی مرحله فونداسیون', date:'۱۴۰۳/۰۲/۲۰', step:5, status:'approved'},
+  {id:'f4', projectId:'p2', stage:'اخذ مجوز', amount:'۳۲۰,۰۰۰,۰۰۰', reason:'هزینه‌های اداری و عوارض شهرداری', date:'۱۴۰۳/۰۶/۰۱', step:3, status:'pending'},
+  {id:'f5', projectId:'p4', stage:'تحویل', amount:'۶۵۰,۰۰۰,۰۰۰', reason:'هزینه نازک‌کاری نهایی لابی', date:'۱۴۰۳/۰۴/۱۵', step:5, status:'approved'},
+  {id:'f6', projectId:'p3', stage:'اسکلت', amount:'۱,۲۰۰,۰۰۰,۰۰۰', reason:'پیش‌پرداخت پیمانکار اسکلت', date:'۱۴۰۳/۰۶/۱۴', step:4, status:'pending'},
+];
+
+const NOTIF_TABS = [
+  {k:'all', l:'همه'},
+  {k:'investment', l:'سرمایه‌گذاری'},
+  {k:'financial', l:'مالی'},
+  {k:'approval', l:'تاییدیه‌ها و پیشرفت کار'},
+];
+/* اعلان یادآوری موعد گزارش پیشرفت حذف شد */
+const NOTIFS = [
+  {id:'n1', icon:'check', tone:'active', cat:'approval', title:'گزارش پیشرفت مرحله اسکلت تایید شد', desc:'برج مروارید لاهیجان — گزارش هفته جاری توسط کارشناس تایید شد.', time:'۲ ساعت پیش', unread:true},
+  {id:'n2', icon:'x', tone:'rejected', cat:'approval', title:'مدرک ضمانت‌نامه رد شد', desc:'شهرک نگین کیش — ضمانت‌نامه بانکی مرحله فونداسیون نیازمند اصلاح است.', time:'دیروز', unread:true},
+  {id:'n4', icon:'coin', tone:'active', cat:'investment', title:'سرمایه مورد نیاز پروژه تامین شد', desc:'برج اداری آرکا اصفهان — سرمایه مورد نیاز این پروژه به طور کامل جذب شد.', time:'۳ روز پیش', unread:false},
+  {id:'n5', icon:'wallet', tone:'active', cat:'financial', title:'درخواست مالی تایید شد', desc:'برج اداری آرکا اصفهان — مبلغ ۶۵۰,۰۰۰,۰۰۰ تومان آزاد شد.', time:'۱ هفته پیش', unread:false},
+];
+
+const CARD_GRADIENTS = [
+  'linear-gradient(135deg,#1F5C4C,#153F34)',
+  'linear-gradient(135deg,#2B5A82,#173A54)',
+  'linear-gradient(135deg,#AD7C2B,#7C581D)',
+  'linear-gradient(135deg,#6B7280,#40454C)',
+];
+
+const ACCOUNT = {
+  personal:{name:'علیرضا مرادی', phone:'۰۹۱۲۳۴۵۶۷۸۹', email:'a.moradi@neginbana.ir'},
+  company:{name:'شرکت ساختمانی نگین بنای پارسیان', nid:'۱۴۰۰۹۸۷۶۵۴۳', reg:'۵۲۱۴۰۹', eco:'۴۱۱۲۲۳۳۳۴۴۵۵', address:'تهران، خیابان ولیعصر، بالاتر از پارک وی، برج نگین، واحد ۸'},
+};
+
+/* ============== STATE ============== */
+const state = {
+  view:'projects',
+  statusFilter:'all',
+  selectedProject:null,
+  projectTab:'overview',
+  wizard:{open:false, step:1, statusValue:'شروع نشده'},
+  projectEdit:{open:false, id:null},
+  finTab:'pending',
+  finNew:{ projectId: PROJECTS[0].id },
+  reportTab:'submitted',
+  reportsProjectFilter:'all',
+  notifTab:'all',
+  notifRead:new Set(),
+  acctTab:'personal',
+  legalActive:false,
+  cards:[
+    {id:'c1', bank:'بانک ملت', holder:'علیرضا مرادی', number:'۶۱۰۴-••••-••••-۳۳۲۱', iban:'IR۸۲۰۱۲۰۰۲۰۰۰۰۰۰۱۲۳۴۵۶۷۸'}
+  ],
+  modal:{type:null, id:null, cat:null, replace:null, context:'panel'},
+  notifModal:{id:null},
+  expertModal:{projectId:null, kind:null, idx:null},
+  historyLoaded:{},
+  page:{projects:1, financial:1, reports:1},
+  PER_PAGE:{projects:6, financial:4, reports:5},
+};
+
+/* ============== HELPERS ============== */
+function fmt(n){ return Number(n).toLocaleString('en-US'); }
+function toFa(n){ return String(n).replace(/\d/g, d=>'۰۱۲۳۴۵۶۷۸۹'[d]); }
+function badge(status, clickable){
+  const m = STATUS_META[status] || STATUS_META.draft;
+  return `<span class="badge ${m.cls} ${clickable?'badge-clickable':''}">${m.label}</span>`;
+}
+function docBadge(status, projectId, idx){
+  const map = {
+    approved:{l:'تایید شده', c:'badge-active'},
+    pending:{l:'در انتظار بررسی', c:'badge-pending'},
+    revision:{l:'نیازمند اصلاح', c:'badge-revision'},
+    rejected:{l:'رد شده', c:'badge-rejected'},
+  }[status] || {l:'—', c:'badge-draft'};
+  const clickable = (status==='revision' || status==='rejected') && projectId!=null;
+  return `<span class="badge ${map.c} ${clickable?'badge-clickable':''}"
+    ${clickable?`data-action="show-expert" data-id="${projectId}" data-kind="doc" data-idx="${idx}"`:''}>${map.l}</span>`;
+}
+function findProject(id){ return PROJECTS.find(p=>p.id===id); }
+function parseDuration(str){
+  if(!str || str==='—') return 0;
+  const fa = '۰۱۲۳۴۵۶۷۸۹';
+  const en = String(str).replace(/[۰-۹]/g, d => fa.indexOf(d));
+  const m = en.match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+/* ============== TOAST & CONFIRM ============== */
+function showToast(msg, type='success'){
+  const el = document.createElement('div');
+  el.className = 'toast toast-'+type;
+  const icon = type==='error' ? I.warn : type==='info' ? I.info : I.check;
+  el.innerHTML = icon + '<span>'+msg+'</span>';
+  document.body.appendChild(el);
+  requestAnimationFrame(()=> el.classList.add('show'));
+  setTimeout(()=>{
+    el.classList.remove('show');
+    setTimeout(()=> el.remove(), 280);
+  }, 2800);
+}
+function showConfirm({title, msg, confirmLabel='حذف', onConfirm}){
+  state.confirm = {title, msg, confirmLabel, onConfirm};
+  render();
+}
+function closeConfirm(){ state.confirm=null; render(); }
+
+/* ============== SHELL ============== */
+const NAV = [
+  {k:'projects', l:'پروژه‌ها', icon:I.building},
+  {k:'investment', l:'سرمایه‌گذاری ها', icon:I.coin},
+  {k:'financial', l:'درخواست‌های مالی', icon:I.wallet, badge:()=>FIN_REQUESTS.filter(f=>f.status==='pending').length},
+  {k:'reports', l:'گزارش های پیشرفت پروژه', icon:I.chart},
+  {k:'notifications', l:'اعلان‌ها', icon:I.bell, badge:()=>unreadCount()},
+  {k:'account', l:'حساب کاربری', icon:I.user},
+];
+const PAGE_META = {
+  projects:{t:'پروژه‌ها', s:'مدیریت کامل پروژه‌های ساختمانی ثبت‌شده شما'},
+  investment:{t:'سرمایه‌گذاری ها', s:'وضعیت بودجه، سرمایه جذب‌شده و سرمایه باقی‌مانده هر پروژه'},
+  financial:{t:'درخواست‌های مالی', s:'ثبت و پیگیری درخواست‌های آزادسازی وجه'},
+  reports:{t:'گزارش های پیشرفت پروژه', s:'وضعیت بررسی گزارش‌های پیشرفت و مدارک'},
+  notifications:{t:'اعلان‌ها', s:'آخرین رویدادهای مرتبط با پروژه‌های شما'},
+  account:{t:'حساب کاربری', s:'اطلاعات شخصی، شرکت، مالی و امنیتی'},
+};
+function unreadCount(){
+  return NOTIFS.filter(n=> n.unread && !state.notifRead.has(n.id)).length;
+}
+
+function render(){
+  const app = document.getElementById('app');
+  const meta = state.selectedProject ? {t:findProject(state.selectedProject).name, s:'جزئیات کامل پروژه'} : PAGE_META[state.view];
+  app.innerHTML = `
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">نب</div>
+        <div>
+          <div class="brand-name">عمارت</div>
+          <div class="brand-sub">پنل انبوه‌ساز</div>
+        </div>
+      </div>
+      <nav class="nav">
+        ${NAV.map(n=>{
+          const cnt = typeof n.badge==='function' ? n.badge() : n.badge;
+          return `<div class="nav-item ${state.view===n.k && !state.selectedProject ? 'active':''}" data-action="nav" data-view="${n.k}">
+            ${n.icon}<span>${n.l}</span>
+            ${cnt ? `<span class="nav-badge ${n.k==='notifications'?'':'muted'}">${cnt}</span>` : ''}
+          </div>`;
+        }).join('')}
+      </nav>
+      <div class="sidebar-foot">
+        <div class="avatar">ع.م</div>
+        <div>
+          <div class="name">علیرضا مرادی</div>
+          <div class="role">انبوه‌ساز</div>
+        </div>
+      </div>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div>
+          <div class="page-title">${meta.t}</div>
+          <div class="page-sub">${meta.s}</div>
+        </div>
+        <div class="topbar-right">
+          <button class="icon-btn" data-action="nav" data-view="notifications">
+            ${I.bell}
+            ${unreadCount() ? `<span class="dot-flag">${unreadCount()}</span>` : ''}
+          </button>
+          <div class="avatar">ع.م</div>
+        </div>
+      </div>
+      <div class="content" id="content"></div>
+    </div>
+    ${state.wizard.open ? renderWizard() : ''}
+    ${state.projectEdit.open ? renderProjectEditModal() : ''}
+    ${state.modal.type ? renderModal() : ''}
+    ${state.notifModal.id ? renderNotifModal() : ''}
+    ${state.expertModal.projectId ? renderExpertModal() : ''}
+    ${state.confirm ? renderConfirm() : ''}
+  `;
+  renderContent();
+  bindEvents();
+  initInvestmentCharts();
+}
+
+function renderContent(){
+  const c = document.getElementById('content');
+  if(state.selectedProject){ c.innerHTML = renderProjectDetail(state.selectedProject); return; }
+  switch(state.view){
+    case 'projects': c.innerHTML = renderProjects(); break;
+    case 'investment': c.innerHTML = renderInvestment(); break;
+    case 'financial': c.innerHTML = renderFinancial(); break;
+    case 'reports': c.innerHTML = renderReports(); break;
+    case 'notifications': c.innerHTML = renderNotifications(); break;
+    case 'account': c.innerHTML = renderAccount(); break;
+  }
+}
+
+/* ============== BREADCRUMB ============== */
+function breadcrumb(items){
+  return `<div class="breadcrumb">${items.map((it,i)=>{
+    const isLast = i===items.length-1;
+    const clickable = !isLast && (it.action || it.view);
+    return `${i>0?'<span class="bc-sep">/</span>':''}
+      <span class="bc-item ${isLast?'current':''}"
+        ${clickable && it.action ? `data-action="${it.action}"` : ''}
+        ${clickable && it.view ? `data-view="${it.view}"` : ''}
+        ${clickable && it.tab ? `data-tab="${it.tab}"` : ''}>${it.label}</span>`;
+  }).join('')}</div>`;
+}
+
+/* ============== PAGINATION ============== */
+function pager(key, total){
+  const per = state.PER_PAGE[key];
+  const pages = Math.max(1, Math.ceil(total/per));
+  const cur = Math.min(state.page[key], pages);
+  if(pages<=1) return '';
+  const nums = [];
+  for(let i=1;i<=pages;i++) nums.push(i);
+  return `<div class="pager">
+    <button data-action="page-goto" data-key="${key}" data-page="${cur-1}" ${cur<=1?'disabled':''}>${I.chevRight}</button>
+    ${nums.map(n=>`<button class="${n===cur?'active':''}" data-action="page-goto" data-key="${key}" data-page="${n}">${n}</button>`).join('')}
+    <button data-action="page-goto" data-key="${key}" data-page="${cur+1}" ${cur>=pages?'disabled':''}>${I.chevLeft}</button>
+    <span class="pager-info">${total} مورد</span>
+  </div>`;
+}
+function paginate(arr, key){
+  const per = state.PER_PAGE[key];
+  const cur = Math.min(state.page[key], Math.max(1, Math.ceil(arr.length/per)));
+  const start = (cur-1)*per;
+  return arr.slice(start, start+per);
+}
+
+/* ============== PROJECTS ============== */
+function renderProjects(){
+  const list = state.statusFilter==='all' ? PROJECTS : PROJECTS.filter(p=>p.status===state.statusFilter);
+  const total = list.length;
+  const paged = paginate(list, 'projects');
+  return `
+    <div class="section-head">
+      <div class="tabs" style="border:none;margin:0;">
+        ${STATUS_TABS.map(t=>`<div class="tab ${state.statusFilter===t.k?'active':''}" data-action="filter" data-status="${t.k}">${t.l}<span class="count">${t.k==='all'?PROJECTS.length:PROJECTS.filter(p=>p.status===t.k).length}</span></div>`).join('')}
+      </div>
+      <button class="btn btn-primary" data-action="open-wizard">${I.plus}پروژه جدید</button>
+    </div>
+    ${total===0 ? emptyState('پروژه‌ای یافت نشد','در این وضعیت پروژه‌ای ثبت نشده است.') : `
+    <div class="projects-grid">
+      ${paged.map(p=>{
+        const remaining = Math.max(0, p.totalCapital - p.raised);
+        const pct       = Math.round((p.raised/p.totalCapital)*100) || 0;
+        const duration  = parseDuration(p.tech.duration);
+        const monthsLeft= duration ? Math.round(duration * (1 - p.progress/100)) : 0;
+        return `
+        <div class="card p-card">
+          <div data-action="open-project" data-id="${p.id}">
+            <div class="p-head">
+              <div class="p-thumb" style="background:${p.cover}">
+                <span class="thumb-icon">${I.building}</span>
+                <span class="type-chip">${PROJECT_TYPES[p.type]}</span>
+              </div>
+              <div class="p-head-info">
+                <span class="p-status-pill is-${p.status}">${STATUS_META[p.status].label}</span>
+                <div class="p-title">${p.name}</div>
+                <div class="p-city">${I.pin}${p.city}</div>
+                <div class="p-stage-line">${I.layers}<span>مرحله فعلی: <b>${p.currentStage||'—'}</b></span></div>
+              </div>
+            </div>
+            <div class="p-budget-grid">
+              <div class="p-budget-col">
+                <span class="p-budget-label">بودجه کل</span>
+                <span class="p-budget-val">${fmt(p.totalCapital)}<small>م.ت</small></span>
+              </div>
+              <div class="p-budget-col">
+                <span class="p-budget-label">کسب شده</span>
+                <span class="p-budget-val highlight">${fmt(p.raised)}<small>م.ت</small></span>
+              </div>
+              <div class="p-budget-col">
+                <span class="p-budget-label">مورد نیاز</span>
+                <span class="p-budget-val">${fmt(remaining)}<small>م.ت</small></span>
+              </div>
+            </div>
+            <div class="p-duration">
+              <div class="p-duration-row">
+                <span>مدت ساخت: <b>${duration?duration+' ماه':'—'}</b>${monthsLeft?` <span style="color:var(--text-faint);">(تا پایان: ${monthsLeft} ماه)</span>`:''}</span>
+                <span class="p-pct">${p.progress}%</span>
+              </div>
+              <div class="progress-track"><div class="progress-fill" style="width:${p.progress}%"></div></div>
+            </div>
+          </div>
+          <div class="p-foot">
+            <button class="btn p-btn-dark p-btn-view" data-action="open-project" data-id="${p.id}">${I.eye}مشاهده پروژه</button>
+            <button class="btn btn-ghost p-btn-edit" data-action="edit-project" data-id="${p.id}">${I.edit}ویرایش پروژه</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${pager('projects', total)}`}
+  `;
+}
+
+function emptyState(t,d){
+  return `<div class="card empty">${I.info}<div class="t">${t}</div><div>${d}</div></div>`;
+}
+
+/* ============== PROJECT DETAIL ============== */
+const PROJECT_TABS = [
+  {k:'overview', l:'نمای کلی'},
+  {k:'tech', l:'اطلاعات فنی'},
+  {k:'docs', l:'مدارک'},
+  {k:'investment', l:'سرمایه‌گذاری'},
+  {k:'progress', l:'گزارش پیشرفت'},
+  {k:'history', l:'تاریخچه تغییرات'},
+];
+
+function renderProjectDetail(id){
+  const p = findProject(id);
+  const bc = breadcrumb([
+    {label:'پروژه‌ها', action:'back-projects'},
+    {label:p.name},
+  ]);
+  return `
+    ${bc}
+    <div class="card" style="overflow:hidden;margin-bottom:20px;">
+      <div style="height:120px;background:${p.cover}"></div>
+      <div style="padding:18px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:17px;font-weight:800;">${p.name}</div>
+          <div style="font-size:12.5px;color:var(--text-faint);display:flex;align-items:center;gap:5px;margin-top:3px;">${I.pin}${p.city} · ${PROJECT_TYPES[p.type]}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          ${badge(p.status)}
+          <button class="btn btn-ghost btn-sm" data-action="edit-project" data-id="${p.id}">${I.edit}ویرایش اطلاعات و تصاویر</button>
+          ${p.status==='draft'?`<button class="btn btn-primary btn-sm" data-action="send-for-review" data-id="${p.id}">ارسال برای بررسی</button>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="tabs">
+      ${PROJECT_TABS.map(t=>`<div class="tab ${state.projectTab===t.k?'active':''}" data-action="ptab" data-tab="${t.k}">${t.l}</div>`).join('')}
+    </div>
+    <div>${renderProjectTab(p)}</div>
+  `;
+}
+
+function renderProjectTab(p){
+  switch(state.projectTab){
+    case 'overview': return pOverview(p);
+    case 'tech': return pTech(p);
+    case 'docs': return pDocs(p);
+    case 'investment': return pInvestment(p);
+    case 'progress': return pProgress(p);
+    case 'history': return pHistory(p);
+  }
+}
+
+/* ---------- OVERVIEW ---------- */
+function pOverview(p){
+  const gallery = p.gallery || [];
+  return `
+    <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:20px;">
+      <div class="card" style="padding:20px;">
+        <div class="section-head" style="margin-bottom:10px;">
+          <div>
+            <div class="section-title">توضیحات پروژه</div>
+            <div class="section-desc">این توضیحات از طریق دکمه «ویرایش اطلاعات و تصاویر» قابل ویرایش است.</div>
+          </div>
+        </div>
+        <div style="color:var(--text-muted);font-size:13.5px;line-height:2;margin-bottom:20px;">${p.desc}</div>
+        <div class="section-head" style="margin-bottom:10px;">
+          <div class="section-title">گالری تصاویر پروژه</div>
+          <button class="btn btn-soft btn-sm" data-action="edit-project" data-id="${p.id}">${I.camera}مدیریت گالری</button>
+        </div>
+        ${gallery.length===0 ? `<div style="font-size:12.5px;color:var(--text-faint);padding:20px;background:var(--surface-alt);border-radius:10px;text-align:center;">تصویری ثبت نشده است.</div>` : `
+        <div class="gallery-grid">
+          ${gallery.map((g,i)=>`
+            <div class="gallery-item ${g.isCover?'cover':''}" style="background:${g.gradient}">
+              ${g.isCover?`<span class="gi-label">کاور</span>`:''}
+            </div>`).join('')}
+        </div>`}
+      </div>
+      <div class="card" style="padding:20px;">
+        <div class="section-title" style="margin-bottom:12px;">موقعیت روی نقشه</div>
+        <div style="height:150px;border-radius:12px;background:var(--surface-alt);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-faint);margin-bottom:18px;">${I.map}</div>
+        <div class="kv-row"><span class="k">وضعیت فعلی</span><span class="v">${badge(p.status)}</span></div>
+        <div class="kv-row"><span class="k">مرحله فعلی</span><span class="v">${p.currentStage}</span></div>
+        <div class="kv-row"><span class="k">درصد پیشرفت کل</span><span class="v">${p.progress}%</span></div>
+        <div class="progress-track" style="margin-top:12px;"><div class="progress-fill" style="width:${p.progress}%"></div></div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- TECH ---------- */
+function pTech(p){
+  const rows = [
+    ['مساحت زمین', p.tech.land], ['زیربنای کل', p.tech.building], ['تعداد طبقات', p.tech.floors],
+    ['تعداد واحدها', p.tech.units], ['تعداد پارکینگ', p.tech.parking], ['کاربری ساختمان', p.tech.usage],
+    ['زمان شروع پروژه', p.tech.start], ['مدت زمان تخمینی', p.tech.duration], ['تاریخ تحویل پیش‌بینی‌شده', p.tech.delivery],
+  ];
+  return `
+    <div class="card" style="background:var(--info-light);border-color:var(--info-light);padding:13px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;">
+      <span style="color:var(--info);">${I.info}</span>
+      <div style="font-size:12.5px;color:var(--text);">اطلاعات فنی هنگام ثبت اولیه پروژه توسط تیم پذیرش وارد شده و پس از تایید قابل ویرایش نیست.</div>
+    </div>
+    <div class="card" style="padding:6px 22px;">${rows.map(r=>`<div class="kv-row"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('')}</div>
+  `;
+}
+
+/* ---------- DOCS ---------- */
+function pDocs(p){
+  const byCat = {};
+  DOC_CATEGORIES.forEach(c => byCat[c.cat] = {required:c.required, docs:[]});
+  (p.docs||[]).forEach((d,i)=>{
+    if(!byCat[d.cat]) byCat[d.cat] = {required:false, docs:[]};
+    byCat[d.cat].docs.push({...d, _idx:i});
+  });
+  return `
+    <div class="section-head">
+      <div class="section-desc">مدارک ارسالی شما در هر دسته‌بندی.</div>
+      <button class="btn btn-primary btn-sm" data-action="open-modal" data-modal="uploadDoc" data-id="${p.id}">${I.upload}افزودن مدرک جدید</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;">
+      ${Object.entries(byCat).map(([cat, info])=>{
+        if(info.docs.length===0){
+          return `
+            <div class="doc-card missing">
+              <div class="doc-top">
+                <div class="doc-icon" style="background:#EEF0F2;color:var(--text-faint);">${I.file}</div>
+                <span class="badge ${info.required?'badge-pending':'badge-draft'}" style="font-size:10px;padding:2px 8px;">${info.required?'اجباری':'اختیاری'}</span>
+              </div>
+              <div class="doc-name" style="color:var(--text-muted);">${cat}</div>
+              <div class="doc-meta">هنوز مدرکی ارسال نشده است.</div>
+              <button class="btn btn-soft btn-sm" style="margin-top:6px;justify-content:center;" data-action="open-modal" data-modal="uploadDoc" data-id="${p.id}" data-cat="${cat}">${I.upload}آپلود مدرک</button>
+            </div>`;
+        }
+        return info.docs.map(d=>{
+          const isRevision = d.status==='revision' || d.status==='rejected';
+          return `
+            <div class="doc-card ${isRevision?'rev':''}">
+              <div class="doc-top">
+                <div class="doc-icon">${I.file}</div>
+                ${docBadge(d.status, p.id, d._idx)}
+              </div>
+              <div class="doc-name">${d.name}</div>
+              <div class="doc-meta">${cat} · ارسال: ${d.date}</div>
+              ${isRevision ? `
+                <div style="display:flex;gap:6px;margin-top:6px;">
+                  <button class="btn btn-soft btn-sm" style="flex:1;justify-content:center;" data-action="open-modal" data-modal="uploadDoc" data-id="${p.id}" data-cat="${cat}" data-replace="${d._idx}">${I.upload}ارسال مجدد</button>
+                  <button class="btn btn-ghost btn-sm" data-action="show-expert" data-id="${p.id}" data-kind="doc" data-idx="${d._idx}" title="مشاهده نظر کارشناس">${I.chat}</button>
+                </div>` : ''}
+            </div>`;
+        }).join('');
+      }).join('')}
+    </div>
+  `;
+}
+
+/* ---------- INVESTMENT (نمودار جدید) ---------- */
+/* ---------- INVESTMENT / PROGRESS LINE CHART (Chart.js) ---------- */
+function buildProgressSeries(p){
+  const labels = [];
+  const progressData = [];
+  const ratios = []; // cumulative weight fraction (0-100) at each point, used to scale raised capital
+  const pointMeta = [];
+  let cumulative = 0;
+  (p.stages||[]).forEach(s=>{
+    if(s.status==='done' && s.end && s.end!=='—'){
+      cumulative += (s.weight||0);
+      labels.push(s.end);
+      progressData.push(cumulative);
+      ratios.push(cumulative);
+      pointMeta.push({title:s.t, state:'انجام شد'});
+    } else if(s.status==='active' && s.start && s.start!=='—'){
+      labels.push(s.start);
+      progressData.push(cumulative);
+      ratios.push(cumulative);
+      pointMeta.push({title:s.t, state:'در حال انجام'});
+    }
+  });
+  const lastRatio = ratios.length ? ratios[ratios.length-1] : 0;
+  const scale = lastRatio > 0 ? (p.raised||0) / lastRatio : 0;
+  const raisedData = ratios.map(r => Math.round(r*scale));
+  return {labels, progressData, raisedData, pointMeta, hasData: labels.length > 0};
+}
+
+function chartWrapHtml(p){
+  const series = buildProgressSeries(p);
+  if(!series.hasData){
+    return `<div class="empty" style="padding:26px;">${I.info}<div class="t">داده‌ای برای نمایش نمودار وجود ندارد</div><div>پس از ثبت اولین گزارش پیشرفت این پروژه، روند پیشرفت و جذب سرمایه در این بخش به صورت نمودار نمایش داده می‌شود.</div></div>`;
+  }
+  return `<div class="chart-wrap" style="height:300px;"><canvas class="invest-chart-canvas" data-project-id="${p.id}" id="chart-${p.id}"></canvas></div>`;
+}
+
+const __chartRegistry = {};
+function initInvestmentCharts(){
+  if(typeof Chart==='undefined') return;
+  document.querySelectorAll('.invest-chart-canvas').forEach(canvas=>{
+    const p = findProject(canvas.dataset.projectId);
+    if(!p) return;
+    const series = buildProgressSeries(p);
+    if(__chartRegistry[canvas.id]){ __chartRegistry[canvas.id].destroy(); delete __chartRegistry[canvas.id]; }
+    __chartRegistry[canvas.id] = new Chart(canvas.getContext('2d'), {
+      type:'line',
+      data:{
+        labels: series.labels,
+        datasets:[
+          {
+            label:'پیشرفت فیزیکی (%)',
+            data: series.progressData,
+            borderColor:'#1F5C4C',
+            backgroundColor:'rgba(31,92,76,.12)',
+            fill:true, tension:.35,
+            pointRadius:5, pointHoverRadius:7,
+            pointBackgroundColor:'#1F5C4C', pointBorderColor:'#fff', pointBorderWidth:1.5,
+            yAxisID:'y',
+          },
+          {
+            label:'سرمایه جذب‌شده (تومان)',
+            data: series.raisedData,
+            borderColor:'#AD7C2B',
+            backgroundColor:'rgba(173,124,43,.08)',
+            borderDash:[5,4],
+            fill:false, tension:.35,
+            pointRadius:5, pointHoverRadius:7,
+            pointBackgroundColor:'#AD7C2B', pointBorderColor:'#fff', pointBorderWidth:1.5,
+            yAxisID:'y1',
+          }
+        ]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        plugins:{
+          legend:{position:'bottom', rtl:true, labels:{font:{family:'Vazirmatn', size:12}, usePointStyle:true, padding:16}},
+          tooltip:{
+            rtl:true,
+            titleFont:{family:'Vazirmatn', weight:'700'},
+            bodyFont:{family:'Vazirmatn'},
+            footerFont:{family:'Vazirmatn'},
+            callbacks:{
+              title:(items)=>{
+                const m = series.pointMeta[items[0].dataIndex];
+                return m ? `${m.title} — ${items[0].label}` : items[0].label;
+              },
+              afterTitle:(items)=>{
+                const m = series.pointMeta[items[0].dataIndex];
+                return m ? m.state : '';
+              },
+              label:(item)=> item.dataset.yAxisID==='y1'
+                ? ' سرمایه جذب‌شده: '+fmt(item.raw)+' م.ت'
+                : ' پیشرفت تجمعی: '+item.raw+'٪'
+            }
+          }
+        },
+        scales:{
+          x:{
+            title:{display:true, text:'تاریخ (روز/ماه/سال)', font:{family:'Vazirmatn', size:11.5}, color:'#6B7280'},
+            ticks:{font:{family:'Vazirmatn', size:11}, color:'#6B7280'},
+            grid:{color:'#EFF1F3'}
+          },
+          y:{
+            position:'left', min:0, max:100,
+            title:{display:true, text:'پیشرفت فیزیکی (%)', font:{family:'Vazirmatn', size:11.5}, color:'#1F5C4C'},
+            ticks:{font:{family:'Vazirmatn', size:11}, color:'#6B7280', callback:v=>v+'٪'},
+            grid:{color:'#EFF1F3'}
+          },
+          y1:{
+            position:'right', min:0,
+            title:{display:true, text:'سرمایه (م.ت)', font:{family:'Vazirmatn', size:11.5}, color:'#AD7C2B'},
+            ticks:{font:{family:'Vazirmatn', size:11}, color:'#6B7280', callback:v=>fmt(v)},
+            grid:{drawOnChartArea:false}
+          }
+        }
+      }
+    });
+  });
+}
+
+function pInvestment(p){
+  const remaining = p.totalCapital - p.raised;
+  const pct = Math.round((p.raised/p.totalCapital)*100) || 0;
+  return `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;">
+      <div class="card" style="padding:18px;"><div style="font-size:12px;color:var(--text-faint);margin-bottom:6px;">بودجه پروژه</div><div style="font-size:20px;font-weight:800;">${fmt(p.totalCapital)} <span style="font-size:12px;font-weight:600;color:var(--text-faint);">م.ت</span></div></div>
+      <div class="card" style="padding:18px;"><div style="font-size:12px;color:var(--text-faint);margin-bottom:6px;">سرمایه جذب‌شده</div><div style="font-size:20px;font-weight:800;color:var(--primary-dark);">${fmt(p.raised)} <span style="font-size:12px;font-weight:600;color:var(--text-faint);">م.ت</span></div></div>
+      <div class="card" style="padding:18px;"><div style="font-size:12px;color:var(--text-faint);margin-bottom:6px;">سرمایه باقی‌مانده</div><div style="font-size:20px;font-weight:800;">${fmt(remaining)} <span style="font-size:12px;font-weight:600;color:var(--text-faint);">م.ت</span></div></div>
+    </div>
+    <div class="card" style="padding:22px;">
+      <div class="section-head" style="margin-bottom:10px;">
+        <div>
+          <div class="section-title">روند پیشرفت و جذب سرمایه پروژه</div>
+          <div class="section-desc">پیشرفت فیزیکی و سرمایه جذب‌شده به تفکیک مراحل گزارش پیشرفت پروژه</div>
+        </div>
+      </div>
+      ${chartWrapHtml(p)}
+    </div>
+  `;
+}
+
+/* ---------- PROGRESS (شبیه پنل گزارش‌ها) ---------- */
+function pProgress(p){
+  return `
+    <div class="section-head">
+      <div class="section-desc">گزارش‌های پیشرفت و مدارک این پروژه</div>
+      <button class="btn btn-primary btn-sm" data-action="open-modal" data-modal="newReport" data-id="${p.id}" data-context="project">${I.upload}ثبت گزارش جدید</button>
+    </div>
+    ${renderReportItems(p.id, false)}
+  `;
+}
+
+/* ---------- HISTORY ---------- */
+function buildHistoryLog(p){
+  const log = [];
+  log.push({time:p.created, actor:'انبوه‌ساز', field:'ثبت اولیه پروژه', before:'—', after:'در انتظار بررسی', afterTone:'pending'});
+  p.stages.forEach(s=>{
+    if(s.status==='draft') return;
+    log.push({
+      time: s.end!=='—'?s.end:s.start,
+      actor:'کارشناس ارزیابی',
+      field:'وضعیت مرحله «'+s.t+'»',
+      before:'در انتظار اجرا',
+      after: s.status==='done'?'تکمیل شده':'در حال اجرا',
+      afterTone: s.status==='done'?'done':'active'
+    });
+  });
+  (p.docs||[]).forEach(d=>{
+    const tone = d.status==='approved'?'active':d.status==='rejected'?'rejected':d.status==='revision'?'revision':'pending';
+    const label = d.status==='approved'?'تایید شده':d.status==='rejected'?'رد شده':d.status==='revision'?'نیازمند اصلاح':'در انتظار بررسی';
+    log.push({
+      time:d.date,
+      actor: d.status==='approved'?'کارشناس ارزیابی':'انبوه‌ساز',
+      field:'مدرک «'+d.name+'»',
+      before:'ارسال شده',
+      after: label,
+      afterTone: tone
+    });
+  });
+  return log.sort((a,b)=> (a.time<b.time?1:-1));
+}
+function pHistory(p){
+  if(!state.historyLoaded[p.id]){
+    setTimeout(()=>{ state.historyLoaded[p.id]=true; render(); }, 600);
+    return `<div class="card" style="padding:40px;text-align:center;color:var(--text-faint);font-size:12.5px;">${I.history}<div style="margin-top:8px;">در حال دریافت تاریخچه تغییرات از پایگاه‌داده...</div></div>`;
+  }
+  const log = buildHistoryLog(p);
+  const toneCls = {pending:'badge-pending', active:'badge-active', done:'badge-done', rejected:'badge-rejected', revision:'badge-revision'};
+  return `
+    <div class="section-head">
+      <div class="section-desc">این لاگ به‌صورت خودکار از رکوردهای ثبت‌شده پروژه در پایگاه‌داده خوانده می‌شود.</div>
+      <button class="btn btn-ghost btn-sm" data-action="refresh-history" data-id="${p.id}">${I.history}به‌روزرسانی</button>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="dt">
+        <thead><tr><th>تاریخ</th><th>ثبت‌کننده</th><th>مورد تغییر</th><th>مقدار قبلی</th><th>مقدار جدید</th></tr></thead>
+        <tbody>
+          ${log.map(i=>`<tr>
+            <td style="white-space:nowrap;">${i.time}</td>
+            <td>${i.actor}</td>
+            <td style="font-weight:700;">${i.field}</td>
+            <td style="color:var(--text-faint);">${i.before}</td>
+            <td><span class="badge ${toneCls[i.afterTone]||'badge-draft'}">${i.after}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+/* ============== WIZARD ============== */
+const WIZARD_STEPS = ['اطلاعات عمومی','اطلاعات فنی','مدارک و مستندات','اطلاعات مالی'];
+function renderWizard(){
+  const step = state.wizard.step;
+  return `
+  <div class="overlay" data-action="close-wizard-bg">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">ثبت پروژه جدید</div>
+        <div class="modal-close" data-action="close-wizard">${I.x}</div>
+      </div>
+      <div class="stepper">
+        ${WIZARD_STEPS.map((l,i)=>`
+          ${i>0?`<div class="step-line"></div>`:''}
+          <div class="step ${i+1<step?'done':i+1===step?'current':''}" style="flex:0 0 auto;">
+            <div class="step-circle">${i+1<step?I.check:i+1}</div>
+            <div class="step-label">${l}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="modal-body">${wizardStepBody(step)}</div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" data-action="wizard-prev" ${step===1?'style="visibility:hidden"':''}>${I.chevLeft}مرحله قبل</button>
+        ${step<4
+          ? `<button class="btn btn-primary" data-action="wizard-next">مرحله بعد</button>`
+          : `<button class="btn btn-primary" data-action="wizard-submit">${I.check}ثبت نهایی پروژه</button>`}
+      </div>
+    </div>
+  </div>`;
+}
+function wizardStepBody(step){
+  if(step===1) return `
+    <div class="form-grid">
+      <div class="field full"><label>عنوان پروژه</label><input placeholder="مثلاً: برج مروارید لاهیجان"/></div>
+      <div class="field full"><label>توضیحات کامل پروژه</label><textarea rows="3" placeholder="توضیح مختصر..."></textarea></div>
+      <div class="field"><label>نوع پروژه</label><select><option>مسکونی</option><option>تجاری</option><option>اداری</option><option>مختلط</option></select></div>
+      <div class="field">
+        <label>وضعیت فعلی پروژه</label>
+        <select data-onchange="wizard-status-change">
+          <option ${state.wizard.statusValue==='شروع نشده'?'selected':''}>شروع نشده</option>
+          <option ${state.wizard.statusValue==='زمین خریداری شده'?'selected':''}>زمین خریداری شده</option>
+          <option ${state.wizard.statusValue==='در حال ساخت'?'selected':''}>در حال ساخت</option>
+        </select>
+      </div>
+      <div class="field"><label>استان</label><input placeholder="مثلاً: گیلان"/></div>
+      <div class="field"><label>شهر</label><input placeholder="مثلاً: لاهیجان"/></div>
+      <div class="field"><label>منطقه</label><input placeholder="منطقه یا محله"/></div>
+      <div class="field"><label>آدرس کامل</label><input placeholder="آدرس دقیق پروژه"/></div>
+      <div class="field full"><label>موقعیت روی نقشه</label><div class="upload-box">${I.map}<div>برای انتخاب موقعیت کلیک کنید</div></div></div>
+      <div class="field"><label>تصویر اصلی پروژه</label><div class="upload-box">${I.upload}<div>آپلود تصویر کاور</div></div></div>
+      <div class="field"><label>گالری تصاویر</label><div class="upload-box">${I.upload}<div>آپلود چند تصویر</div></div></div>
+      ${state.wizard.statusValue==='در حال ساخت' ? `
+      <div class="field full">
+        <div class="card" style="background:var(--info-light);border-color:var(--info-light);padding:13px 16px;display:flex;gap:10px;align-items:flex-start;">
+          <span style="color:var(--info);">${I.info}</span>
+          <div style="font-size:12.5px;color:var(--text);">چون این پروژه از قبل در حال ساخت است، لطفاً وضعیت فعلی پیشرفت کار را مشخص کنید.</div>
+        </div>
+      </div>
+      <div class="field"><label>آخرین مرحله تکمیل‌شده</label>
+        <select>
+          ${REPORT_STAGES.map(s=>`<option>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>درصد پیشرفت فیزیکی فعلی (%)</label><input placeholder="مثلاً: ۳۵"/></div>
+      <div class="field full"><label>توضیح قسمت‌های تکمیل‌شده</label><textarea rows="3" placeholder="توضیح دهید تا این لحظه چه بخش‌هایی اجرا شده..."></textarea></div>
+      ` : ''}
+    </div>`;
+  if(step===2) return `
+    <div class="form-grid">
+      <div class="field"><label>مساحت زمین (متر مربع)</label><input placeholder="مثلاً: ۲۴۰۰"/></div>
+      <div class="field"><label>زیربنای کل (متر مربع)</label><input placeholder="مثلاً: ۱۸۶۰۰"/></div>
+      <div class="field"><label>تعداد طبقات</label><input placeholder="مثلاً: ۱۲"/></div>
+      <div class="field"><label>تعداد واحدها</label><input placeholder="مثلاً: ۸۴"/></div>
+      <div class="field"><label>تعداد پارکینگ</label><input placeholder="مثلاً: ۹۶"/></div>
+      <div class="field"><label>کاربری ساختمان</label><input placeholder="مسکونی / تجاری / اداری"/></div>
+      <div class="field"><label>زمان شروع پروژه</label><input placeholder="۱۴۰۳/۰۱/۰۱"/></div>
+      <div class="field"><label>زمان تخمینی تکمیل</label><input placeholder="مثلاً: ۲۲ ماه"/></div>
+      <div class="field full"><label>تاریخ تحویل پیش‌بینی‌شده</label><input placeholder="۱۴۰۴/۰۷/۰۱"/></div>
+    </div>`;
+  if(step===3) return `
+    <div class="field hint" style="margin-bottom:14px;">مدارک «اجباری» برای ارسال پروژه به بررسی الزامی هستند.</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+      ${DOC_CATEGORIES.map(c=>`
+        <div class="upload-box" style="text-align:right;padding:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:8px;color:var(--text);font-weight:700;font-size:12.5px;">${I.file}${c.cat}</div>
+            <span class="badge ${c.required?'badge-pending':'badge-draft'}" style="font-size:10px;padding:2px 8px;">${c.required?'اجباری':'اختیاری'}</span>
+          </div>
+          <div style="font-size:11.5px;">برای آپلود فایل کلیک کنید یا بکشید و رها کنید</div>
+        </div>`).join('')}
+    </div>`;
+  if(step===4) return `
+    <div class="form-grid">
+      <div class="field"><label>بودجه مورد نیاز پروژه (تومان)</label><input placeholder="مثلاً: ۴۰,۰۰۰,۰۰۰,۰۰۰"/></div>
+      <div class="field"><label>بودجه مورد نیاز اولیه (تومان)</label><input placeholder="مثلاً: ۲۵,۰۰۰,۰۰۰,۰۰۰"/></div>
+    </div>
+    <div class="card" style="background:var(--gold-light);border-color:var(--gold-light);padding:13px 16px;margin-top:16px;display:flex;gap:10px;align-items:flex-start;">
+      <span style="color:var(--gold);">${I.info}</span>
+      <div style="font-size:12.5px;color:var(--text);">نحوه و شرایط تامین مالی این پروژه پیش از انتشار توسط ادمین بررسی و تایید خواهد شد.</div>
+    </div>`;
+}
+
+/* ============== PROJECT EDIT MODAL (توضیحات + گالری) ============== */
+function renderProjectEditModal(){
+  const p = findProject(state.projectEdit.id);
+  if(!p) return '';
+  const gallery = p.gallery || [];
+  return `
+  <div class="overlay" data-action="close-proj-edit-bg">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">${I.edit}ویرایش اطلاعات و تصاویر — ${p.name}</div>
+        <div class="modal-close" data-action="close-proj-edit">${I.x}</div>
+      </div>
+      <div class="modal-body">
+        <div style="background:var(--info-light);padding:11px 14px;border-radius:10px;font-size:12.5px;margin-bottom:16px;display:flex;gap:8px;align-items:flex-start;">
+          ${I.info}<div>در این بخش تنها امکان ویرایش «توضیحات پروژه» و «گالری تصاویر» وجود دارد. سایر اطلاعات پروژه توسط تیم پذیرش ثبت شده و قابل تغییر نیست.</div>
+        </div>
+
+        <div class="field full" style="margin-bottom:20px;">
+          <label>توضیحات پروژه</label>
+          <textarea data-field="project-desc" rows="4" placeholder="توضیحات پروژه...">${p.desc||''}</textarea>
+          <div class="hint">این توضیحات در صفحه پروژه و کارت پروژه نمایش داده می‌شود.</div>
+        </div>
+
+        <div class="section-title" style="font-size:13px;margin-bottom:10px;">تصویر کاور فعلی</div>
+        <div style="width:100%;height:140px;border-radius:12px;background:${p.cover};margin-bottom:20px;position:relative;display:flex;align-items:flex-end;padding:10px;">
+          <span style="background:var(--gold);color:#fff;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;">کاور فعلی</span>
+        </div>
+
+        <div class="section-head" style="margin-bottom:10px;">
+          <div class="section-title" style="font-size:13px;">گالری تصاویر</div>
+          <button class="btn btn-primary btn-sm" data-action="add-gallery-img" data-id="${p.id}">${I.upload}افزودن تصویر</button>
+        </div>
+        ${gallery.length===0 ? `<div style="font-size:12.5px;color:var(--text-faint);padding:20px;background:var(--surface-alt);border-radius:10px;text-align:center;">گالری خالی است.</div>` : `
+        <div class="gallery-grid">
+          ${gallery.map((g,i)=>`
+            <div class="gallery-item ${g.isCover?'cover':''}" style="background:${g.gradient}">
+              ${g.isCover?`<span class="gi-label">کاور</span>`:''}
+              <span class="gi-del" data-action="delete-gallery-img" data-id="${p.id}" data-idx="${i}" title="حذف">${I.trash}</span>
+              ${!g.isCover?`<span class="gi-setcover" data-action="set-cover" data-id="${p.id}" data-idx="${i}">تنظیم کاور</span>`:''}
+            </div>`).join('')}
+        </div>`}
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" data-action="close-proj-edit">انصراف</button>
+        <button class="btn btn-primary" data-action="save-proj-edit" data-id="${p.id}">${I.check}ذخیره تغییرات</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ============== GENERIC MODAL ============== */
+function renderModal(){
+  const m = state.modal;
+  const p = m.id ? findProject(m.id) : null;
+  const CONF = {
+    uploadDoc:{title: m.cat? 'آپلود مدرک — '+m.cat : 'آپلود مدرک جدید'},
+    addCard:{title:'افزودن حساب بانکی جدید'},
+    newReport:{title:'ثبت گزارش پیشرفت جدید'},
+  }[m.type] || {title:'فرم'};
+  return `
+  <div class="overlay" data-action="close-modal-bg">
+    <div class="modal narrow" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">${CONF.title}</div>
+        <div class="modal-close" data-action="close-modal">${I.x}</div>
+      </div>
+      <div class="modal-body">${modalBody(m.type,p)}</div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" data-action="close-modal">انصراف</button>
+        <button class="btn btn-primary" data-action="modal-submit" data-modaltype="${m.type}" data-id="${m.id||''}">${I.check}${m.type==='addCard'?'افزودن کارت':m.type==='newReport'?'ثبت گزارش':'ثبت'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+function modalBody(type,p){
+  if(type==='uploadDoc'){
+    const cat = state.modal.cat;
+    const isReplace = state.modal.replace != null;
+    return `
+    <div class="form-grid">
+      <div class="field full"><label>دسته‌بندی مدرک</label>
+        <select ${cat?'disabled':''} data-field="doc-cat">
+          ${DOC_CATEGORIES.map(c=>`<option ${cat===c.cat?'selected':''}>${c.cat}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field full"><label>عنوان مدرک</label><input data-field="doc-name" placeholder="مثلاً: سند تک‌برگ زمین"/></div>
+      <div class="field full"><label>فایل مدرک</label><div class="upload-box">${I.upload}<div>برای آپلود فایل کلیک کنید یا بکشید و رها کنید</div></div></div>
+      <div class="field full"><label>توضیحات (اختیاری)</label><textarea rows="2"></textarea></div>
+    </div>
+    ${isReplace && p && p.docs && p.docs[state.modal.replace]?`<div style="margin-top:10px;background:var(--gold-light);color:var(--gold);padding:10px 12px;border-radius:9px;font-size:12px;">${I.warn} در حال ارسال مجدد مدرک «${p.docs[state.modal.replace].name}» هستید.</div>`:''}
+    `;
+  }
+  if(type==='addCard') return `
+    <div class="form-grid">
+      <div class="field full"><label>بانک</label><select data-field="bank">
+        <option>بانک ملی</option><option>بانک ملت</option><option>بانک صادرات</option><option>بانک تجارت</option>
+        <option>بانک پاسارگاد</option><option>بانک سامان</option><option>بانک کشاورزی</option><option>بانک مسکن</option><option>سایر</option>
+      </select></div>
+      <div class="field full"><label>نام صاحب حساب</label><input data-field="holder" placeholder="مثلاً: علیرضا مرادی"/></div>
+      <div class="field full"><label>شماره کارت</label><input data-field="number" placeholder="XXXX-XXXX-XXXX-XXXX" style="direction:ltr;text-align:right;"/></div>
+      <div class="field full"><label>شماره شبا</label><input data-field="iban" placeholder="IRXXXXXXXXXXXXXXXXXXXXXX" style="direction:ltr;text-align:right;"/></div>
+    </div>`;
+  if(type==='newReport'){
+    const context = state.modal.context || 'panel';
+    const fixedProject = context === 'project';
+    const pid = state.modal.id || PROJECTS[0].id;
+    const proj = findProject(pid) || PROJECTS[0];
+    return `
+    <div class="form-grid">
+      <div class="field full">
+        <label>پروژه</label>
+        ${fixedProject
+          ? `<input readonly value="${proj.name}"/>
+             <div class="hint">${I.info} در حال ثبت گزارش برای این پروژه هستید. برای انتخاب پروژه دیگر، از پنل «گزارش های پیشرفت پروژه» اقدام کنید.</div>`
+          : `<select data-field="report-project">
+               ${PROJECTS.map(p2=>`<option value="${p2.id}" ${p2.id===pid?'selected':''}>${p2.name}</option>`).join('')}
+             </select>`}
+      </div>
+      <div class="field">
+        <label>مرحله پروژه</label>
+        <select data-field="stage">
+          ${REPORT_STAGES.map(s=>`<option>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label>زیرمرحله <span style="font-weight:400;color:var(--text-faint);font-size:11px;">(اختیاری)</span></label>
+        <input data-field="substage" placeholder="در صورت نیاز وارد کنید..."/>
+        <div class="hint">وارد کردن زیرمرحله اختیاری است و می‌توانید خالی بگذارید.</div>
+      </div>
+      <div class="field full">
+        <label>متن گزارش</label>
+        <textarea rows="3" placeholder="شرح پیشرفت اجراشده..."></textarea>
+      </div>
+      <div class="field">
+        <label>درصد پیشرفت اجرایی این بخش</label>
+        <input placeholder="مثلاً: ۶۵"/>
+      </div>
+      <div class="field">
+        <label>تصاویر پیشرفت</label>
+        <div class="upload-box" style="padding:12px;">${I.upload}<div style="font-size:11px;">آپلود تصویر</div></div>
+      </div>
+    </div>`;
+  }
+  return '';
+}
+
+/* ============== NOTIFICATION MODAL ============== */
+function renderNotifModal(){
+  const n = NOTIFS.find(x=>x.id===state.notifModal.id);
+  if(!n) return '';
+  const isUnread = n.unread && !state.notifRead.has(n.id);
+  const toneColor = {active:'primary-dark', rejected:'danger', pending:'warning', info:'info'};
+  const toneBg = {active:'primary-light', rejected:'danger-light', pending:'warning-light', info:'info-light'};
+  const catLabel = {investment:'سرمایه‌گذاری', financial:'مالی', approval:'تاییدیه‌ها و پیشرفت کار'}[n.cat] || '';
+  return `
+  <div class="overlay" data-action="close-notif-bg">
+    <div class="modal narrow" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">جزئیات اعلان</div>
+        <div class="modal-close" data-action="close-notif">${I.x}</div>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;">
+          <div class="notif-icon" style="background:var(--${toneBg[n.tone]});color:var(--${toneColor[n.tone]});width:44px;height:44px;">${I[n.icon]}</div>
+          <div style="flex:1;">
+            <div style="font-size:14.5px;font-weight:800;margin-bottom:6px;">${n.title}</div>
+            <div style="font-size:11.5px;color:var(--text-faint);display:flex;gap:12px;flex-wrap:wrap;">
+              <span>دسته: ${catLabel}</span>
+              <span>${n.time}</span>
+              <span style="color:${isUnread?'var(--danger)':'var(--primary-dark)'};font-weight:700;">${isUnread?'خوانده نشده':'خوانده شده'}</span>
+            </div>
+          </div>
+        </div>
+        <div style="background:var(--surface-alt);border:1px solid var(--border-soft);border-radius:12px;padding:14px 16px;font-size:13.5px;color:var(--text);line-height:2;">${n.desc}</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" data-action="close-notif">بستن</button>
+        ${isUnread ? `<button class="btn btn-primary" data-action="notif-mark-read" data-id="${n.id}">${I.check}علامت‌گذاری به عنوان خوانده شده</button>` : `<span style="font-size:12px;color:var(--text-faint);">${I.check} این اعلان خوانده شده است</span>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ============== EXPERT COMMENT MODAL ============== */
+function renderExpertModal(){
+  const p = findProject(state.expertModal.projectId);
+  if(!p) return '';
+  const d = p.docs[state.expertModal.idx];
+  if(!d) return '';
+  return `
+  <div class="overlay" data-action="close-expert-bg">
+    <div class="modal narrow" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">${I.chat}نظر کارشناس — ${d.name}</div>
+        <div class="modal-close" data-action="close-expert">${I.x}</div>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+          <div class="doc-icon">${I.file}</div>
+          <div>
+            <div style="font-weight:700;font-size:13.5px;">${d.name}</div>
+            <div style="font-size:11.5px;color:var(--text-faint);">${d.cat} · ارسال: ${d.date}</div>
+          </div>
+          <div style="margin-right:auto;">${docBadge(d.status, p.id, state.expertModal.idx)}</div>
+        </div>
+        <div class="expert-box">
+          <div class="ex-title">${I.warn} نظر کارشناس ارزیابی</div>
+          <div class="ex-text">${d.expertComment || 'دلیل رد این مدرک توسط کارشناس ثبت نشده است.'}</div>
+          <div class="ex-meta">ثبت‌شده توسط: کارشناس ارزیابی عمارت · تاریخ: ۱۴۰۳/۰۶/۱۲</div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" data-action="close-expert">بستن</button>
+        <button class="btn btn-primary" data-action="open-modal" data-modal="uploadDoc" data-id="${p.id}" data-cat="${d.cat}" data-replace="${state.expertModal.idx}">${I.upload}ارسال اصلاحیه</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ============== CONFIRM ============== */
+function renderConfirm(){
+  const c = state.confirm;
+  return `
+  <div class="overlay" data-action="confirm-cancel">
+    <div class="confirm-modal" onclick="event.stopPropagation()">
+      <div class="confirm-icon">${I.warn}</div>
+      <div class="confirm-title">${c.title}</div>
+      <div class="confirm-msg">${c.msg}</div>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" data-action="confirm-cancel">انصراف</button>
+        <button class="btn btn-danger-soft" data-action="confirm-yes">${c.confirmLabel||'حذف'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ============== INVESTMENT PAGE ============== */
+function renderInvestment(){
+  const list = PROJECTS.filter(p=>p.totalCapital);
+  return `
+    ${list.map(p=>{
+      const pct = Math.round((p.raised/p.totalCapital)*100) || 0;
+      const duration = parseDuration(p.tech.duration) || 12;
+      return `
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+          <div>
+            <div style="font-weight:800;font-size:15px;">${p.name}</div>
+            <div style="font-size:12px;color:var(--text-faint);margin-top:2px;">${p.city} · مدت پروژه: ${duration} ماه</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            ${badge(p.status)}
+            <button class="btn btn-ghost btn-sm" data-action="open-project" data-id="${p.id}">مشاهده</button>
+          </div>
+        </div>
+        <div style="border:1px solid var(--border-soft);border-radius:12px;padding:8px;background:var(--surface-alt);">${chartWrapHtml(p)}</div>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+/* ============== FINANCIAL REQUESTS ============== */
+const FIN_TABS = [
+  {k:'pending', l:'در انتظار'}, {k:'approved', l:'تایید شده'},
+  {k:'rejected', l:'رد شده'}, {k:'all', l:'تاریخچه'},
+];
+const FIN_WF = ['ارسال شده','کارشناسان عمارت','کارشناسان مالی','عرضه توکن','آزادسازی وجه'];
+
+function renderFinancial(){
+  if(state.finTab==='new') return renderFinancialNew();
+  let filtered = state.finTab==='all' ? FIN_REQUESTS :
+                state.finTab==='pending' ? FIN_REQUESTS.filter(f=>f.status==='pending') :
+                FIN_REQUESTS.filter(f=>f.status===state.finTab);
+  const total = filtered.length;
+  const paged = paginate(filtered, 'financial');
+  return `
+    <div class="section-head">
+      <div class="tabs" style="border:none;margin:0;">${FIN_TABS.map(t=>`<div class="tab ${state.finTab===t.k?'active':''}" data-action="fintab" data-tab="${t.k}">${t.l}</div>`).join('')}</div>
+      <button class="btn btn-primary" data-action="fintab" data-tab="new">${I.plus}ثبت درخواست جدید</button>
+    </div>
+    ${total===0 ? emptyState('درخواستی یافت نشد','در این بخش هنوز درخواستی ثبت نشده است.') : paged.map(f=>{
+      const proj = findProject(f.projectId);
+      return `
+      <div class="card" style="padding:18px 20px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div style="font-weight:700;font-size:13.5px;">${f.reason}</div>
+            <div style="font-size:12px;color:var(--text-faint);margin-top:3px;">${proj?proj.name:'—'} · مرحله ${f.stage} · ${f.date}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="font-weight:800;font-size:14px;">${f.amount} <span style="font-size:11px;color:var(--text-faint);font-weight:500;">تومان</span></div>
+            ${badge(f.status==='pending'?'pending':f.status==='approved'?'active':'rejected')}
+          </div>
+        </div>
+        ${f.note ? `<div style="margin-top:10px;font-size:12px;color:var(--danger);background:var(--danger-light);padding:8px 12px;border-radius:8px;">${f.note}</div>`:''}
+        <div style="display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap;">
+          ${FIN_WF.map((w,i)=>{
+            const done = i+1 < f.step;
+            const current = i+1 === f.step;
+            const bg = done ? 'var(--primary)' : current ? 'var(--gold)' : 'var(--surface-alt)';
+            const fg = done || current ? '#fff' : 'var(--text-faint)';
+            const icon = done ? I.check : (i+1);
+            return `
+              ${i>0?`<span style="width:20px;height:1.5px;background:${done?'var(--primary)':'var(--border)'};"></span>`:''}
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="width:24px;height:24px;border-radius:50%;background:${bg};color:${fg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">${icon}</span>
+                <span style="font-size:11px;color:${done||current?'var(--text)':'var(--text-faint)'};font-weight:${done||current?600:400};">${w}</span>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('') + pager('financial', total)}
+  `;
+}
+
+function renderFinancialNew(){
+  const curProj = findProject(state.finNew.projectId) || PROJECTS[0];
+  const stages = (curProj.stages||[]).filter(s=>s.status!=='draft');
+  const bc = breadcrumb([
+    {label:'درخواست‌های مالی', action:'fintab', tab:'pending'},
+    {label:'ثبت درخواست جدید'},
+  ]);
+  return `
+    ${bc}
+    <div class="section-head">
+      <div class="tabs" style="border:none;margin:0;">${FIN_TABS.map(t=>`<div class="tab ${state.finTab===t.k?'active':''}" data-action="fintab" data-tab="${t.k}">${t.l}</div>`).join('')}</div>
+    </div>
+    <div class="card" style="padding:22px;max-width:640px;">
+      <div class="form-grid">
+        <div class="field"><label>پروژه</label><select data-onchange="fin-project-change">
+          ${PROJECTS.filter(p=>(p.stages||[]).some(s=>s.status!=='draft')).map(p=>`<option value="${p.id}" ${p.id===state.finNew.projectId?'selected':''}>${p.name}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>مرحله پروژه</label><select data-field="fin-stage">
+          ${stages.length ? stages.map(s=>`<option>${s.t}</option>`).join('') : `<option>مرحله‌ای تعریف نشده</option>`}
+        </select></div>
+        <div class="field"><label>مبلغ درخواستی (تومان)</label><input placeholder="مثلاً: ۲,۸۰۰,۰۰۰,۰۰۰"/></div>
+        <div class="field"><label>دلیل درخواست</label><input placeholder="مثلاً: تسویه صورت‌وضعیت پیمانکار"/></div>
+        <div class="field full"><label>توضیحات</label><textarea rows="3"></textarea></div>
+        <div class="field"><label>فاکتورها</label><div class="upload-box">${I.upload}<div>آپلود فاکتور</div></div></div>
+        <div class="field"><label>تصاویر پیشرفت</label><div class="upload-box">${I.upload}<div>آپلود تصویر</div></div></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button class="btn btn-primary" data-action="fin-new-submit">${I.check}ثبت درخواست</button>
+        <button class="btn btn-ghost" data-action="fintab" data-tab="pending">انصراف</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ============== REPORTS ============== */
+const REPORT_TABS = [
+  {k:'submitted', l:'در انتظار بررسی'},
+  {k:'approved',  l:'تایید شده'},
+  {k:'revision',  l:'نیازمند اصلاح'},
+  {k:'rejected',  l:'رد شده'},
+  {k:'history',   l:'تاریخچه'},
+];
+
+function reportAllItems(filterPid){
+  const all = [];
+  PROJECTS.forEach(p=>{
+    if(filterPid && filterPid!=='all' && p.id!==filterPid) return;
+    (p.docs||[]).forEach((d,idx)=>{
+      all.push({
+        pid:p.id, idx, projName:p.name, stage:d.cat, kind:'مدرک',
+        text:d.name,
+        status: d.status==='approved'?'approved':d.status==='rejected'?'rejected':d.status==='revision'?'revision':'submitted',
+        date:d.date, expertComment:d.expertComment
+      });
+    });
+    (p.stages||[]).forEach((s,idx)=>{
+      if(s.report){
+        all.push({
+          pid:p.id, idx, projName:p.name, stage:s.t, kind:'گزارش پیشرفت',
+          text:s.report,
+          status: s.status==='done' ? 'approved' : 'submitted',
+          date: s.end!=='—'?s.end:s.start
+        });
+      }
+    });
+  });
+  return all;
+}
+
+function renderReports(){
+  const pid = state.reportsProjectFilter || 'all';
+  return `
+    <div class="section-head">
+      <div class="section-desc">گزارش‌های پیشرفت و مدارک ارسالی، پیگیری و تاریخچه تغییرات.</div>
+      <button class="btn btn-primary btn-sm" data-action="open-modal" data-modal="newReport" data-id="${pid==='all'?'':pid}" data-context="panel">${I.upload}ثبت گزارش جدید</button>
+    </div>
+    <div class="card" style="padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <label style="font-size:12.5px;font-weight:600;color:var(--text-muted);">انتخاب پروژه:</label>
+      <select data-onchange="reports-project-filter" style="min-width:240px;">
+        <option value="all" ${pid==='all'?'selected':''}>همه پروژه‌ها</option>
+        ${PROJECTS.map(p=>`<option value="${p.id}" ${p.id===pid?'selected':''}>${p.name}</option>`).join('')}
+      </select>
+    </div>
+    ${renderReportItems(pid, pid==='all')}
+  `;
+}
+
+function renderReportItems(pid, showProject){
+  const allItems = reportAllItems(pid);
+  const isHistory = state.reportTab === 'history';
+
+  const tabsHtml = `<div class="tabs">
+    ${REPORT_TABS.map(t=>`<div class="tab ${state.reportTab===t.k?'active':''}" data-action="reptab" data-tab="${t.k}">${t.l}${t.k!=='history'?`<span class="count">${allItems.filter(i=>i.status===t.k).length}</span>`:''}</div>`).join('')}
+  </div>`;
+
+  if(isHistory) return tabsHtml + renderReportsHistory(pid);
+
+  const filtered = allItems.filter(i=>i.status===state.reportTab);
+  if(!filtered.length) return tabsHtml + emptyState('موردی یافت نشد','در این بخش موردی برای نمایش وجود ندارد.');
+
+  const isRevision = i => i.status==='revision' || i.status==='rejected';
+
+  return tabsHtml + filtered.map(i=>`
+    <div class="card" style="padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <div class="doc-icon" style="flex-shrink:0;">${i.kind==='مدرک'?I.file:I.chart}</div>
+        <div>
+          <div style="font-weight:700;font-size:13.5px;">${showProject?`${i.projName} — `:''}${i.stage}</div>
+          <div style="font-size:12px;color:var(--text-faint);margin-top:2px;">${i.kind} · ${i.text}</div>
+          <div style="font-size:11px;color:var(--text-faint);margin-top:4px;">${i.date}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        ${i.kind==='مدرک' ? docBadge(i.status, i.pid, i.idx) : badge(i.status==='submitted'?'pending':i.status==='approved'?'active':'revision')}
+        ${isRevision(i) && i.kind==='مدرک' ? `<button class="btn btn-ghost btn-sm" data-action="show-expert" data-id="${i.pid}" data-kind="doc" data-idx="${i.idx}" title="مشاهده نظر کارشناس">${I.chat}نظر کارشناس</button>` : ''}
+        ${isRevision(i) && i.kind==='مدرک' ? `<button class="btn btn-soft btn-sm" data-action="open-modal" data-modal="uploadDoc" data-id="${i.pid}" data-cat="${i.stage}" data-replace="${i.idx}">${I.upload}ارسال اصلاحیه</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function renderReportsHistory(pid){
+  const key = 'reports-hist-'+pid;
+  if(!state.historyLoaded[key]){
+    setTimeout(()=>{ state.historyLoaded[key]=true; render(); }, 600);
+    return `<div class="card" style="padding:40px;text-align:center;color:var(--text-faint);font-size:12.5px;">${I.history}<div style="margin-top:8px;">در حال دریافت تاریخچه از پایگاه‌داده...</div></div>`;
+  }
+  const projs = pid==='all' ? PROJECTS : [findProject(pid)].filter(Boolean);
+  const log = [];
+  projs.forEach(p => buildHistoryLog(p).forEach(it => log.push({...it, projName:p.name})));
+  log.sort((a,b)=> (a.time<b.time?1:-1));
+  const toneCls = {pending:'badge-pending', active:'badge-active', done:'badge-done', rejected:'badge-rejected', revision:'badge-revision'};
+  return `
+    <div class="section-head" style="margin-bottom:12px;">
+      <div class="section-desc">این لاگ به‌صورت خودکار از رکوردهای ثبت‌شده پروژه در پایگاه‌داده خوانده می‌شود.</div>
+      <button class="btn btn-ghost btn-sm" data-action="refresh-history" data-id="${key}">${I.history}به‌روزرسانی</button>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="dt">
+        <thead><tr><th>تاریخ</th>${pid==='all'?'<th>پروژه</th>':''}<th>ثبت‌کننده</th><th>مورد تغییر</th><th>قبلی</th><th>جدید</th></tr></thead>
+        <tbody>
+          ${log.map(i=>`<tr>
+            <td style="white-space:nowrap;">${i.time}</td>
+            ${pid==='all'?`<td>${i.projName}</td>`:''}
+            <td>${i.actor}</td>
+            <td style="font-weight:700;">${i.field}</td>
+            <td style="color:var(--text-faint);">${i.before}</td>
+            <td><span class="badge ${toneCls[i.afterTone]||'badge-draft'}">${i.after}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+/* ============== NOTIFICATIONS ============== */
+function renderNotifications(){
+  const toneColor = {active:'primary-dark', rejected:'danger', pending:'warning', info:'info'};
+  const toneBg = {active:'primary-light', rejected:'danger-light', pending:'warning-light', info:'info-light'};
+  const tab = state.notifTab || 'all';
+  const filtered = tab==='all' ? NOTIFS : NOTIFS.filter(n=>n.cat===tab);
+  const unreadTotal = unreadCount();
+  return `
+    <div class="section-head">
+      <div class="tabs" style="border:none;margin:0;">
+        ${NOTIF_TABS.map(t=>`<div class="tab ${tab===t.k?'active':''}" data-action="notiftab" data-tab="${t.k}">${t.l}<span class="count">${t.k==='all'?NOTIFS.length:NOTIFS.filter(n=>n.cat===t.k).length}</span></div>`).join('')}
+      </div>
+      ${unreadTotal>0 ? `<button class="btn btn-soft btn-sm" data-action="mark-all-read">${I.check}همه خوانده شد</button>` : ''}
+    </div>
+    ${filtered.length===0 ? emptyState('اعلانی یافت نشد','در این بخش هنوز اعلانی ثبت نشده است.') : `<div class="card">
+      ${filtered.map(n=>{
+        const isUnread = n.unread && !state.notifRead.has(n.id);
+        return `
+        <div class="notif-item ${isUnread?'unread':''}" data-action="notif-click" data-id="${n.id}">
+          <div class="notif-icon" style="background:var(--${toneBg[n.tone]});color:var(--${toneColor[n.tone]});">${I[n.icon]}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="notif-title">${isUnread?`<span class="unread-dot"></span>`:''}${n.title}</div>
+            <div class="notif-desc">${n.desc}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <div class="notif-time">${n.time}</div>
+            ${isUnread?`<span style="font-size:11px;color:var(--primary-dark);font-weight:700;">خوانده نشده</span>`:`<span style="font-size:11px;color:var(--text-faint);">خوانده شده</span>`}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`}
+  `;
+}
+
+/* ============== ACCOUNT ============== */
+const ACCT_TABS = [
+  {k:'personal', l:'اطلاعات شخصی'},
+  {k:'company', l:'اطلاعات شرکت'},
+  {k:'financial', l:'اطلاعات مالی'},
+  {k:'identity', l:'احراز هویت'},
+  {k:'security', l:'امنیت'},
+];
+function renderAccount(){
+  return `
+    <div class="acct-layout">
+      <div class="acct-tabs">
+        ${ACCT_TABS.map(t=>`<div class="acct-tab ${state.acctTab===t.k?'active':''}" data-action="acctab" data-tab="${t.k}">${t.l}</div>`).join('')}
+      </div>
+      <div class="card" style="flex:1;padding:22px;min-width:0;">${acctTabBody()}</div>
+    </div>
+  `;
+}
+function acctTabBody(){
+  const a = ACCOUNT;
+  if(state.acctTab==='personal') return `
+    <div class="section-title" style="margin-bottom:14px;">اطلاعات شخصی</div>
+    <div class="kv-row"><span class="k">نام و نام خانوادگی</span><span class="v">${a.personal.name}</span></div>
+    <div class="kv-row"><span class="k">شماره تماس</span><span class="v">${a.personal.phone}</span></div>
+    <div class="kv-row"><span class="k">ایمیل</span><span class="v">${a.personal.email}</span></div>
+    <button class="btn btn-ghost btn-sm" style="margin-top:16px;" data-action="open-modal" data-modal="editPersonal">${I.edit}ویرایش اطلاعات</button>`;
+  if(state.acctTab==='company'){
+    if(!state.legalActive) return `
+      <div class="section-title" style="margin-bottom:14px;">اطلاعات حقوقی شرکت</div>
+      <div class="legal-teaser">
+        <div class="legal-teaser-inner">
+          <div class="kv-row"><span class="k">نام شرکت</span><span class="v">${a.company.name}</span></div>
+          <div class="kv-row"><span class="k">شناسه ملی</span><span class="v">${a.company.nid}</span></div>
+          <div class="kv-row"><span class="k">شماره ثبت</span><span class="v">${a.company.reg}</span></div>
+          <div class="kv-row"><span class="k">کد اقتصادی</span><span class="v">${a.company.eco}</span></div>
+          <div class="kv-row"><span class="k">آدرس شرکت</span><span class="v">${a.company.address}</span></div>
+        </div>
+        <div class="legal-teaser-overlay">
+          <div class="id-card-icon">${I.building}</div>
+          <div class="legal-teaser-title">فعالیت به صورت حقوقی (شرکتی)</div>
+          <div class="legal-teaser-text">با افزودن اطلاعات ثبتی شرکت — نام، شناسه ملی، شماره ثبت و کد اقتصادی — می‌توانید پروژه‌های خود را به صورت حقوقی در سامانه ثبت و مدیریت کنید.</div>
+          <button class="btn btn-primary btn-sm" data-action="activate-legal">${I.plus}افزودن اطلاعات شرکت</button>
+        </div>
+      </div>`;
+    return `
+    <div class="section-title" style="margin-bottom:14px;">اطلاعات حقوقی شرکت</div>
+    <div class="kv-row"><span class="k">نام شرکت</span><span class="v">${a.company.name}</span></div>
+    <div class="kv-row"><span class="k">شناسه ملی</span><span class="v">${a.company.nid}</span></div>
+    <div class="kv-row"><span class="k">شماره ثبت</span><span class="v">${a.company.reg}</span></div>
+    <div class="kv-row"><span class="k">کد اقتصادی</span><span class="v">${a.company.eco}</span></div>
+    <div class="kv-row"><span class="k">آدرس شرکت</span><span class="v">${a.company.address}</span></div>
+    <button class="btn btn-ghost btn-sm" style="margin-top:16px;" data-action="open-modal" data-modal="editCompany">${I.edit}ثبت درخواست ویرایش</button>`;
+  }
+  if(state.acctTab==='financial') return `
+    <div class="section-head">
+      <div>
+        <div class="section-title">حساب‌های بانکی</div>
+        <div class="section-desc">هنگام ثبت درخواست برداشت وجه، از بین کارت‌های ثبت‌شده در این بخش می‌توانید کارت مقصد واریز را انتخاب کنید. حداکثر ۳ حساب می‌توانید وارد نمایید.</div>
+      </div>
+      <button class="btn btn-primary btn-sm" data-action="open-modal" data-modal="addCard">${I.plus}افزودن حساب جدید</button>
+    </div>
+    ${!state.cards.length ? emptyState('کارتی ثبت نشده','برای دریافت وجه، حداقل یک کارت بانکی اضافه کنید.') : `
+    <div class="bank-cards-grid">
+      ${state.cards.map((c,i)=>`
+        <div class="bank-card" style="background:${CARD_GRADIENTS[i%CARD_GRADIENTS.length]}">
+          <span class="bc-del" data-action="delete-card" data-id="${c.id}" title="حذف کارت">${I.trash}</span>
+          <div class="bc-top"><span>${c.bank}</span>${I.bank}</div>
+          <div class="bc-number">${c.number}</div>
+          <div class="bc-bottom"><span>${c.holder}</span><span>شبا: ...${(c.iban||'').slice(-4)}</span></div>
+        </div>`).join('')}
+    </div>`}`;
+  if(state.acctTab==='identity') return `
+    <div class="section-title" style="margin-bottom:14px;">مدارک احراز هویت</div>
+    <div class="identity-grid">
+      <div class="card id-card">
+        <div class="id-card-head">
+          <div class="id-card-icon">${I.user}</div>
+          <div class="id-card-titles">
+            <div class="id-card-title">احراز هویت حقیقی</div>
+            <div class="id-card-sub">مدارک هویتی شخصی شما</div>
+          </div>
+          <span class="badge badge-active">تایید شده</span>
+        </div>
+        <div class="id-card-body">
+          <div class="doc-card">
+            <div class="doc-top"><div class="doc-icon">${I.file}</div><span class="badge badge-active">تایید شده</span></div>
+            <div class="doc-name">روی کارت ملی</div>
+            <div class="doc-meta">ارسال: ۱۴۰۲/۰۵/۱۰</div>
+          </div>
+          <div class="doc-card">
+            <div class="doc-top"><div class="doc-icon">${I.file}</div><span class="badge badge-active">تایید شده</span></div>
+            <div class="doc-name">پشت کارت ملی</div>
+            <div class="doc-meta">ارسال: ۱۴۰۲/۰۵/۱۰</div>
+          </div>
+        </div>
+      </div>
+      <div class="card id-card ${state.legalActive?'':'id-card-locked'}">
+        <div class="id-card-inner">
+          <div class="id-card-head">
+            <div class="id-card-icon">${I.building}</div>
+            <div class="id-card-titles">
+              <div class="id-card-title">احراز هویت حقوقی</div>
+              <div class="id-card-sub">مدارک ثبتی شرکت</div>
+            </div>
+            ${state.legalActive?`<span class="badge badge-active">تایید شده</span>`:''}
+          </div>
+          <div class="id-card-body">
+            <div class="doc-card">
+              <div class="doc-top"><div class="doc-icon">${I.file}</div><span class="badge badge-active">تایید شده</span></div>
+              <div class="doc-name">روزنامه رسمی شرکت</div>
+              <div class="doc-meta">ارسال: ۱۴۰۲/۰۵/۱۰</div>
+            </div>
+            <div class="doc-card">
+              <div class="doc-top"><div class="doc-icon">${I.file}</div><span class="badge badge-active">تایید شده</span></div>
+              <div class="doc-name">آگهی صاحبان امضا</div>
+              <div class="doc-meta">ارسال: ۱۴۰۲/۰۵/۱۰</div>
+            </div>
+          </div>
+        </div>
+        ${state.legalActive?'':`
+        <div class="id-card-overlay">
+          <button class="add-fab" data-action="activate-legal">${I.plus}</button>
+          <div class="id-card-overlay-title">فعالیت به عنوان شخص حقوقی</div>
+          <div class="id-card-overlay-text">برای احراز هویت حقوقی، مدارک ثبتی شرکت را اضافه کنید.</div>
+        </div>`}
+      </div>
+    </div>`;
+  if(state.acctTab==='security') return `
+    <div class="section-title" style="margin-bottom:14px;">امنیت حساب</div>
+    <div class="kv-row"><span class="k">رمز عبور</span><span class="v"><button class="btn btn-ghost btn-sm">تغییر رمز</button></span></div>
+    <div class="kv-row"><span class="k">آخرین ورود</span><span class="v"> · ۱۴۰۳/۰۶/۱۴ ساعت ۰۹:۱۲</span></div>`;
+}
+
+/* ============== EVENT BINDING ============== */
+function bindEvents(){
+  document.querySelectorAll('[data-onchange]').forEach(el=>{
+    el.addEventListener('change', (e)=>{
+      const action = el.dataset.onchange;
+      if(action==='wizard-status-change'){ state.wizard.statusValue = el.value; render(); }
+      else if(action==='reports-project-filter'){ state.reportsProjectFilter = el.value; state.page.reports=1; render(); }
+      else if(action==='fin-project-change'){ state.finNew.projectId = el.value; render(); }
+    });
+  });
+
+  document.querySelectorAll('[data-action]').forEach(el=>{
+    el.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const a = el.dataset.action;
+
+      if(a==='nav'){ state.view = el.dataset.view; state.selectedProject=null; state.projectTab='overview'; state.reportTab='submitted'; }
+      else if(a==='filter'){ state.statusFilter = el.dataset.status; state.page.projects=1; }
+      else if(a==='open-project'){ state.selectedProject = el.dataset.id; state.projectTab='overview'; state.reportTab='submitted'; }
+      else if(a==='back-projects'){ state.selectedProject=null; }
+      else if(a==='ptab'){ state.projectTab = el.dataset.tab; if(el.dataset.tab==='progress') state.reportTab='submitted'; }
+
+      else if(a==='open-wizard'){ state.wizard = {open:true, step:1, statusValue:'شروع نشده'}; }
+      else if(a==='close-wizard' || a==='close-wizard-bg'){ state.wizard.open=false; }
+      else if(a==='wizard-next'){ state.wizard.step = Math.min(4, state.wizard.step+1); }
+      else if(a==='wizard-prev'){ state.wizard.step = Math.max(1, state.wizard.step-1); }
+      else if(a==='wizard-submit'){ state.wizard.open=false; showToast('پروژه با موفقیت ثبت شد و برای بررسی ارسال گردید.'); }
+
+      else if(a==='page-goto'){
+        const key = el.dataset.key;
+        const page = +el.dataset.page;
+        state.page[key] = Math.max(1, page);
+      }
+
+      // submit request - go to financial new with pre-filled project
+      else if(a==='submit-request'){
+        state.selectedProject = null;
+        state.view = 'financial';
+        state.finTab = 'new';
+        state.finNew.projectId = el.dataset.id;
+      }
+
+      // project edit modal (description + gallery)
+      else if(a==='edit-project'){ state.projectEdit = {open:true, id:el.dataset.id}; }
+      else if(a==='close-proj-edit' || a==='close-proj-edit-bg'){ state.projectEdit = {open:false, id:null}; }
+      else if(a==='save-proj-edit'){
+        const p = findProject(el.dataset.id);
+        const modalEl = el.closest('.modal');
+        const desc = modalEl.querySelector('[data-field="project-desc"]')?.value;
+        if(p && desc != null) p.desc = desc;
+        state.projectEdit = {open:false, id:null};
+        showToast('اطلاعات و تصاویر پروژه ذخیره شد.');
+        render();
+        return;
+      }
+      else if(a==='add-gallery-img'){
+        const p = findProject(el.dataset.id);
+        p.gallery = p.gallery || [];
+        const grads = ['linear-gradient(135deg,#1F5C4C,#3A8067)','linear-gradient(135deg,#AD7C2B,#D3A854)','linear-gradient(135deg,#2B5A82,#4C7EA8)','linear-gradient(135deg,#153F34,#2B6B58)'];
+        p.gallery.push({gradient: grads[p.gallery.length % grads.length], isCover: p.gallery.length===0});
+        showToast('تصویر جدید به گالری اضافه شد.');
+      }
+      else if(a==='delete-gallery-img'){
+        const p = findProject(el.dataset.id);
+        const idx = +el.dataset.idx;
+        const g = p.gallery[idx];
+        if(g && g.isCover && p.gallery.length>1){
+          showToast('ابتدا کاور جدیدی انتخاب کنید سپس این تصویر را حذف نمایید.','error');
+          return;
+        }
+        showConfirm({
+          title:'حذف تصویر گالری',
+          msg:'آیا از حذف این تصویر از گالری پروژه مطمئن هستید؟',
+          onConfirm:()=>{
+            p.gallery.splice(idx,1);
+            state.confirm=null;
+            showToast('تصویر از گالری حذف شد.');
+            render();
+          }
+        });
+        return;
+      }
+      else if(a==='set-cover'){
+        const p = findProject(el.dataset.id);
+        const idx = +el.dataset.idx;
+        p.gallery.forEach((g,i)=> g.isCover = (i===idx));
+        p.cover = p.gallery[idx].gradient;
+        showToast('تصویر کاور پروژه به‌روزرسانی شد.');
+      }
+
+      else if(a==='delete-card'){
+        const id = el.dataset.id;
+        showConfirm({
+          title:'حذف کارت بانکی',
+          msg:'آیا از حذف این کارت بانکی مطمئن هستید؟',
+          onConfirm:()=>{
+            state.cards = state.cards.filter(c=>c.id!==id);
+            state.confirm=null;
+            showToast('کارت بانکی حذف شد.');
+            render();
+          }
+        });
+        return;
+      }
+
+      else if(a==='send-for-review'){
+        const p = findProject(el.dataset.id);
+        showConfirm({
+          title:'ارسال برای بررسی',
+          msg:`پروژه «${p.name}» برای بررسی به کارشناس ارسال می‌شود.`,
+          confirmLabel:'ارسال',
+          onConfirm:()=>{
+            p.status = 'pending';
+            state.confirm=null;
+            showToast('پروژه برای بررسی ارسال شد.');
+            render();
+          }
+        });
+        return;
+      }
+
+      else if(a==='confirm-yes'){ if(state.confirm && state.confirm.onConfirm) state.confirm.onConfirm(); return; }
+      else if(a==='confirm-cancel'){ closeConfirm(); return; }
+
+      else if(a==='show-expert'){ state.expertModal = {projectId: el.dataset.id, kind: el.dataset.kind, idx:+el.dataset.idx}; }
+      else if(a==='close-expert' || a==='close-expert-bg'){ state.expertModal = {projectId:null, kind:null, idx:null}; }
+
+      else if(a==='notif-click'){ state.notifModal = {id: el.dataset.id}; }
+      else if(a==='close-notif' || a==='close-notif-bg'){ state.notifModal = {id:null}; }
+      else if(a==='notif-mark-read'){
+        state.notifRead.add(el.dataset.id);
+        showToast('اعلان به عنوان خوانده‌شده علامت‌گذاری شد.');
+      }
+      else if(a==='mark-all-read'){
+        NOTIFS.forEach(n=> state.notifRead.add(n.id));
+        showToast('همه اعلان‌ها خوانده‌شده شدند.');
+      }
+      else if(a==='notiftab'){ state.notifTab = el.dataset.tab; }
+
+      else if(a==='fintab'){ state.finTab = el.dataset.tab; state.page.financial=1; }
+      else if(a==='fin-new-submit'){
+        state.finTab='pending';
+        showToast('درخواست مالی با موفقیت ثبت شد.');
+      }
+
+      else if(a==='reptab'){ state.reportTab = el.dataset.tab; state.page.reports=1; }
+
+      else if(a==='acctab'){ state.acctTab = el.dataset.tab; }
+
+      else if(a==='activate-legal'){
+        state.legalActive = true;
+        showToast('اطلاعات حقوقی فعال شد. اکنون می‌توانید مدارک شرکت را تکمیل کنید.');
+      }
+
+      else if(a==='open-modal'){
+        state.modal = {
+          type: el.dataset.modal,
+          id: el.dataset.id||null,
+          cat: el.dataset.cat||null,
+          replace: el.dataset.replace!=null ? +el.dataset.replace : null,
+          context: el.dataset.context || 'panel',
+        };
+        if(state.expertModal.projectId){ state.expertModal = {projectId:null, kind:null, idx:null}; }
+      }
+      else if(a==='close-modal' || a==='close-modal-bg'){ state.modal = {type:null, id:null, cat:null, replace:null, context:'panel'}; }
+      else if(a==='modal-submit'){
+        const modalEl = el.closest('.modal');
+        const mt = el.dataset.modaltype;
+        const pid = el.dataset.id;
+        const getField = n => modalEl.querySelector(`[data-field="${n}"]`);
+        if(mt==='uploadDoc'){
+          const proj = findProject(pid);
+          const cat = getField('doc-cat')?.value || state.modal.cat || 'سایر مدارک';
+          const name = getField('doc-name')?.value || 'مدرک جدید';
+          if(state.modal.replace != null && proj.docs[state.modal.replace]){
+            proj.docs[state.modal.replace].status = 'pending';
+            proj.docs[state.modal.replace].date = '۱۴۰۳/۰۶/۱۴';
+            showToast('مدرک اصلاح‌شده مجدداً ارسال و برای بررسی ارسال شد.');
+          } else {
+            proj.docs.push({cat, name, date:'۱۴۰۳/۰۶/۱۴', status:'pending'});
+            showToast('مدرک با موفقیت آپلود شد.');
+          }
+        }
+        else if(mt==='addCard'){
+          const bank = getField('bank')?.value || 'سایر';
+          const holder = getField('holder')?.value || ACCOUNT.personal.name;
+          const number = getField('number')?.value || '••••-••••-••••-••••';
+          const iban = getField('iban')?.value || '—';
+          state.cards.push({id:'c'+Date.now(), bank, holder, number, iban});
+          showToast('کارت بانکی جدید افزوده شد.');
+        }
+        else if(mt==='newReport'){
+          showToast('گزارش با موفقیت ثبت و برای بررسی ارسال شد.');
+        }
+        else if(mt==='editPersonal'){
+          ACCOUNT.personal.name = getField('name')?.value || ACCOUNT.personal.name;
+          ACCOUNT.personal.phone = getField('phone')?.value || ACCOUNT.personal.phone;
+          ACCOUNT.personal.email = getField('email')?.value || ACCOUNT.personal.email;
+          showToast('اطلاعات شخصی ذخیره شد.');
+        }
+        else if(mt==='editCompany'){
+          ACCOUNT.company.name = getField('name')?.value || ACCOUNT.company.name;
+          ACCOUNT.company.nid = getField('nid')?.value || ACCOUNT.company.nid;
+          ACCOUNT.company.reg = getField('reg')?.value || ACCOUNT.company.reg;
+          ACCOUNT.company.eco = getField('eco')?.value || ACCOUNT.company.eco;
+          ACCOUNT.company.address = getField('address')?.value || ACCOUNT.company.address;
+          showToast('اطلاعات شرکت ذخیره شد.');
+        }
+        state.modal = {type:null, id:null, cat:null, replace:null, context:'panel'};
+      }
+
+      else if(a==='refresh-history'){ state.historyLoaded[el.dataset.id] = false; }
+
+      render();
+    });
+  });
+}
+
+render();
+</script>
+</body>
+</html>

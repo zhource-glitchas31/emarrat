@@ -1,0 +1,2717 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل سوپر ادمین | عمارت</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+  :root{
+    --bg:#F4F5F7; --surface:#FFFFFF; --surface-alt:#FAFBFC; --border:#E7E9EC; --border-soft:#EFF1F3;
+    --text:#181B20; --text-muted:#6B7280; --text-faint:#9AA1AC;
+    --primary:#1F5C4C; --primary-dark:#153F34; --primary-light:#E6F0EC;
+    --gold:#AD7C2B; --gold-light:#F8EFDD;
+    --danger:#B3392C; --danger-light:#FBEAE7;
+    --warning:#B07A1E; --warning-light:#FAF0DC;
+    --info:#2B5A82; --info-light:#E8F0F7;
+    --radius:16px; --radius-sm:10px;
+    --shadow-sm:0 1px 2px rgba(20,23,28,.05);
+    --shadow-md:0 10px 30px -14px rgba(20,23,28,.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  /* Safety net: any inline icon svg without an explicit sized wrapper falls back to a sane size
+     instead of the browser's default (which can render huge, unsized icons). More specific
+     rules elsewhere (.btn svg, .nav-item svg, etc.) still win over this. */
+  svg{width:18px;height:18px;flex-shrink:0;}
+  body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.7;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:#D7DBE0;border-radius:8px;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;}
+  input,textarea,select{font-family:inherit;font-size:13.5px;}
+
+  .app{display:flex;min-height:100vh;}
+
+  /* SIDEBAR */
+  .sidebar{width:250px;flex:0 0 250px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;}
+  .brand{padding:22px 20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border-soft);}
+  .brand-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(155deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;flex-shrink:0;}
+  .brand-name{font-weight:700;font-size:14.5px;color:var(--text);}
+  .brand-sub{font-size:11.5px;color:var(--text-faint);margin-top:1px;}
+
+  .nav{padding:14px 12px;display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text-muted);font-size:13.5px;font-weight:500;cursor:pointer;}
+  .nav-item svg{width:18px;height:18px;flex-shrink:0;}
+  .nav-item:hover{background:var(--surface-alt);color:var(--text);}
+  .nav-item.active{background:var(--primary-light);color:var(--primary-dark);font-weight:700;}
+  .nav-badge{margin-right:auto;background:var(--danger);color:#fff;font-size:10.5px;font-weight:700;border-radius:20px;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 5px;}
+  .nav-badge.muted{background:var(--gold);}
+
+  .sidebar-foot{padding:14px;border-top:1px solid var(--border-soft);display:flex;align-items:center;gap:10px;}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--gold-light);color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;flex-shrink:0;}
+  .sidebar-foot .name{font-size:12.5px;font-weight:700;}
+  .sidebar-foot .role{font-size:11px;color:var(--text-faint);}
+
+  /* MAIN */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{height:64px;flex:0 0 64px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:20;gap:14px;}
+  .page-title{font-size:16px;font-weight:700;}
+  .page-sub{font-size:12px;color:var(--text-faint);margin-top:1px;}
+  .topbar-right{display:flex;align-items:center;gap:12px;}
+  .icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--text-muted);position:relative;cursor:pointer;}
+  .icon-btn:hover{background:var(--surface-alt);}
+  .icon-btn svg{width:17px;height:17px;}
+  .dot-flag{position:absolute;top:-4px;left:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:20px;background:var(--danger);color:#fff;font-size:10.5px;font-weight:700;border:1.5px solid var(--surface);display:flex;align-items:center;justify-content:center;}
+
+  .content{padding:20px 26px 60px;flex:1;}
+
+  /* BREADCRUMB */
+  .breadcrumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;font-size:12.5px;color:var(--text-faint);}
+  .breadcrumb .bc-item{cursor:pointer;transition:color .12s;}
+  .breadcrumb .bc-item:hover{color:var(--primary-dark);}
+  .breadcrumb .bc-item.current{color:var(--text);font-weight:700;cursor:default;}
+
+  /* GENERIC */
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid transparent;white-space:nowrap;transition:all .12s;}
+  .btn svg{width:15px;height:15px;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-ghost{background:var(--surface);color:var(--text);border-color:var(--border);}
+  .btn-ghost:hover{background:var(--surface-alt);}
+  .btn-soft{background:var(--primary-light);color:var(--primary-dark);}
+  .btn-danger-soft{background:var(--danger-light);color:var(--danger);}
+  .btn-danger-soft:hover{background:#F5D5D0;}
+  .btn-sm{padding:6px 11px;font-size:12px;border-radius:8px;}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;line-height:1.4;}
+  .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .badge-active{background:var(--primary-light);color:var(--primary-dark);}
+  .badge-pending{background:var(--warning-light);color:var(--warning);}
+  .badge-rejected{background:var(--danger-light);color:var(--danger);}
+  .badge-revision{background:var(--gold-light);color:var(--gold);}
+  .badge-draft{background:#EEF0F2;color:var(--text-muted);}
+  .badge-done{background:var(--info-light);color:var(--info);}
+  .badge-clickable{cursor:pointer;transition:transform .1s;}
+  .badge-clickable:hover{transform:scale(1.04);}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:22px;overflow-x:auto;}
+  .tab{padding:11px 16px;font-size:13.5px;font-weight:600;color:var(--text-faint);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;}
+  .tab:hover{color:var(--text);}
+  .tab.active{color:var(--primary-dark);border-color:var(--primary);}
+  .tab .count{background:var(--surface-alt);color:var(--text-faint);font-size:11px;padding:1px 7px;border-radius:20px;margin-right:6px;}
+  .tab.active .count{background:var(--primary-light);color:var(--primary-dark);}
+
+  /* PROJECT CARDS */
+  .projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+  .p-card{overflow:hidden;transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column;cursor:pointer;}
+  .p-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+  .p-head{display:flex;gap:14px;padding:16px 16px 14px;align-items:flex-start;}
+  .p-thumb{width:104px;height:104px;border-radius:12px;flex-shrink:0;position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:8px;}
+  .p-thumb .thumb-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.28);}
+  .p-thumb .thumb-icon svg{width:40px;height:40px;}
+  .p-thumb .type-chip{position:relative;z-index:1;background:rgba(255,255,255,.94);color:var(--text);font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;}
+  .p-head-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;}
+  .p-status-pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;align-self:flex-start;line-height:1.5;}
+  .p-status-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .p-status-pill.is-active{background:var(--primary-light);color:var(--primary-dark);}
+  .p-status-pill.is-pending{background:var(--warning-light);color:var(--warning);}
+  .p-status-pill.is-revision{background:var(--gold-light);color:var(--gold);}
+  .p-status-pill.is-rejected{background:var(--danger-light);color:var(--danger);}
+  .p-status-pill.is-done{background:var(--info-light);color:var(--info);}
+  .p-status-pill.is-draft{background:#EEF0F2;color:var(--text-muted);}
+  .p-title{font-size:15px;font-weight:800;color:var(--text);line-height:1.5;}
+  .p-city{font-size:11.5px;color:var(--text-faint);display:flex;align-items:center;gap:5px;}
+  .p-city svg{width:12px;height:12px;flex-shrink:0;}
+  .p-stage-line{font-size:11.5px;color:var(--text-muted);display:flex;align-items:center;gap:6px;background:var(--surface-alt);border:1px solid var(--border-soft);padding:6px 10px;border-radius:9px;}
+  .p-stage-line svg{width:13px;height:13px;color:var(--primary);flex-shrink:0;}
+  .p-stage-line b{color:var(--text);font-weight:700;}
+  .p-budget-grid{display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface-alt);border-top:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft);}
+  .p-budget-col{padding:12px 6px;text-align:center;position:relative;}
+  .p-budget-col + .p-budget-col::before{content:'';position:absolute;right:0;top:14px;bottom:14px;width:1px;background:var(--border);}
+  .p-budget-label{font-size:10.5px;color:var(--text-faint);display:block;margin-bottom:5px;white-space:nowrap;}
+  .p-budget-val{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;}
+  .p-budget-val small{font-size:9.5px;font-weight:600;color:var(--text-faint);margin-right:2px;}
+  .p-budget-val.highlight{color:var(--primary-dark);}
+  .p-duration{padding:14px 16px 10px;}
+  .p-duration-row{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--text-muted);margin-bottom:8px;gap:8px;}
+  .p-duration-row b{color:var(--text);font-weight:700;}
+  .p-duration-row .p-pct{color:var(--primary-dark);font-weight:800;}
+  .p-duration .progress-track{margin:0;height:8px;}
+  .p-duration .progress-fill{background:linear-gradient(90deg,var(--primary),#3A8067);}
+  .p-foot{display:flex;gap:6px;padding:0 16px 16px;margin-top:auto;}
+  .p-foot .btn{justify-content:center;padding:8px 10px;font-size:12px;}
+  .p-foot .p-btn-view{flex:0 0 30%;}
+  .p-foot .p-btn-edit{flex:0 0 70%;}
+  .p-btn-dark{background:var(--primary-dark);color:#fff;border-color:var(--primary-dark);}
+  .p-btn-dark:hover{background:#0D2A22;}
+  .p-btn-gold{background:var(--gold);color:#fff;border-color:var(--gold);}
+  .p-btn-gold:hover{background:#8F6520;}
+
+  .progress-track{height:6px;background:var(--border-soft);border-radius:20px;overflow:hidden;margin:10px 0 12px;}
+  .progress-fill{height:100%;border-radius:20px;background:var(--primary);}
+
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap;}
+  .section-title{font-size:15.5px;font-weight:700;}
+  .section-desc{font-size:12px;color:var(--text-faint);margin-top:2px;}
+
+  table.dt{width:100%;border-collapse:collapse;font-size:13px;}
+  table.dt th{text-align:right;font-size:11.5px;color:var(--text-faint);font-weight:600;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface-alt);}
+  table.dt td{padding:13px 14px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
+  table.dt tr:last-child td{border-bottom:none;}
+  table.dt tr:hover td{background:var(--surface-alt);}
+
+  /* DOC CARDS */
+  .doc-card{border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;}
+  .doc-card.rev{border-color:#EEDDB6;background:#FEFBF3;}
+  .doc-card.missing{border-style:dashed;background:var(--surface-alt);}
+  .doc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .doc-icon{width:34px;height:34px;border-radius:9px;background:var(--info-light);color:var(--info);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .doc-icon svg{width:16px;height:16px;}
+  .doc-name{font-weight:700;font-size:13px;}
+  .doc-meta{font-size:11.5px;color:var(--text-faint);}
+  .doc-actions{display:flex;gap:6px;margin-top:6px;}
+
+  /* IDENTITY CARDS */
+  .identity-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media (max-width:820px){.identity-grid{grid-template-columns:1fr;}}
+  .id-card{padding:18px;position:relative;overflow:hidden;}
+  .id-card-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .id-card-icon{width:38px;height:38px;border-radius:10px;background:var(--primary-light);color:var(--primary-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .id-card-icon svg{width:19px;height:19px;}
+  .id-card-titles{min-width:0;}
+  .id-card-title{font-weight:800;font-size:13.5px;}
+  .id-card-sub{font-size:11.5px;color:var(--text-faint);margin-top:1px;}
+  .id-card-head .badge{margin-right:auto;flex-shrink:0;}
+  .id-card-body{display:grid;gap:12px;}
+  .id-card-locked .id-card-inner{filter:blur(5px);opacity:.55;pointer-events:none;user-select:none;}
+  .id-card-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;background:linear-gradient(180deg, rgba(255,255,255,.25), rgba(255,255,255,.82));}
+  .add-fab{width:46px;height:46px;border-radius:50%;background:var(--primary);color:#fff;border:none;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-md);transition:background .12s,transform .12s;}
+  .add-fab svg{width:20px;height:20px;}
+  .add-fab:hover{background:var(--primary-dark);transform:scale(1.05);}
+  .id-card-overlay-title{font-size:13px;font-weight:800;color:var(--text);}
+  .id-card-overlay-text{font-size:11.5px;color:var(--text-muted);max-width:230px;line-height:1.9;}
+
+  /* LEGAL TEASER (company info tab) */
+  .legal-teaser{position:relative;border-radius:var(--radius-sm);overflow:hidden;}
+  .legal-teaser .legal-teaser-inner{filter:blur(5px);opacity:.5;pointer-events:none;user-select:none;}
+  .legal-teaser-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:28px 20px;background:linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.85));}
+  .legal-teaser-overlay .id-card-icon{width:52px;height:52px;}
+  .legal-teaser-overlay .id-card-icon svg{width:24px;height:24px;}
+  .legal-teaser-title{font-size:14.5px;font-weight:800;color:var(--text);}
+  .legal-teaser-text{font-size:12.5px;color:var(--text-muted);max-width:340px;line-height:1.9;}
+
+  .timeline{position:relative;padding-right:26px;}
+  .timeline::before{content:'';position:absolute;right:9px;top:4px;bottom:4px;width:2px;background:var(--border);}
+  .t-item{position:relative;padding-bottom:22px;}
+  .t-item:last-child{padding-bottom:0;}
+  .t-dot{position:absolute;right:-26px;top:2px;width:20px;height:20px;border-radius:50%;background:var(--primary-light);border:2px solid var(--surface);display:flex;align-items:center;justify-content:center;color:var(--primary-dark);}
+  .t-dot svg{width:10px;height:10px;}
+  .t-dot.pending{background:var(--warning-light);color:var(--warning);}
+  .t-title{font-size:13px;font-weight:700;}
+  .t-desc{font-size:12px;color:var(--text-faint);margin-top:2px;}
+  .t-time{font-size:11px;color:var(--text-faint);margin-top:4px;}
+
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field.full{grid-column:1/-1;}
+  .field label{font-size:12.5px;font-weight:600;color:var(--text-muted);}
+  .field input,.field select,.field textarea{border:1px solid var(--border);border-radius:9px;padding:10px 12px;background:var(--surface);color:var(--text);outline:none;transition:border-color .12s;}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);}
+  .field input:disabled,.field input[readonly]{background:var(--surface-alt);color:var(--text-muted);cursor:not-allowed;}
+  .field .hint{font-size:11px;color:var(--text-faint);}
+  .upload-box{border:1.5px dashed var(--border);border-radius:12px;padding:22px;text-align:center;color:var(--text-faint);font-size:12.5px;background:var(--surface-alt);cursor:pointer;}
+  .upload-box svg{width:22px;height:22px;margin-bottom:8px;color:var(--text-faint);}
+
+  /* MODAL */
+  .overlay{position:fixed;inset:0;background:rgba(15,17,21,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .modal{background:var(--surface);border-radius:18px;width:100%;max-width:760px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 30px 60px -20px rgba(0,0,0,.35);}
+  .modal.narrow{max-width:520px;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0;}
+  .modal-title{font-size:15px;font-weight:700;}
+  .modal-close{width:30px;height:30px;border-radius:9px;border:1px solid var(--border);background:var(--surface-alt);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .modal-close svg{width:14px;height:14px;}
+  .modal-body{padding:22px;overflow-y:auto;}
+  .modal-foot{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-top:1px solid var(--border);flex-shrink:0;gap:10px;}
+
+  .stepper{display:flex;align-items:center;padding:0 22px;padding-top:16px;}
+  .step{display:flex;align-items:center;gap:8px;flex:1;}
+  .step-circle{width:26px;height:26px;border-radius:50%;background:var(--surface-alt);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:var(--text-faint);flex-shrink:0;}
+  .step.done .step-circle{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .step.current .step-circle{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;}
+  .step-label{font-size:12px;font-weight:600;color:var(--text-faint);white-space:nowrap;}
+  .step.done .step-label,.step.current .step-label{color:var(--text);}
+  .step-line{flex:1;height:1.5px;background:var(--border);margin:0 6px;}
+
+  .empty{text-align:center;padding:50px 20px;color:var(--text-faint);}
+  .empty svg{width:34px;height:34px;margin-bottom:10px;color:var(--border);}
+  .empty .t{font-size:13.5px;font-weight:700;color:var(--text-muted);margin-bottom:3px;}
+
+  .notif-item{display:flex;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border-soft);cursor:pointer;}
+  .notif-item:last-child{border-bottom:none;}
+  .notif-item.unread{background:var(--surface-alt);}
+  .notif-item:hover{background:#F1F3F5;}
+  .notif-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .notif-icon svg{width:16px;height:16px;}
+  .notif-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .notif-title .unread-dot{width:7px;height:7px;border-radius:50%;background:var(--danger);}
+  .notif-desc{font-size:12px;color:var(--text-faint);margin-top:2px;}
+  .notif-time{font-size:11px;color:var(--text-faint);white-space:nowrap;}
+
+  .acct-tabs{display:flex;flex-direction:column;gap:2px;width:190px;flex-shrink:0;}
+  .acct-tab{padding:11px 14px;border-radius:10px;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;}
+  .acct-tab:hover{background:var(--surface-alt);}
+  .acct-tab.active{background:var(--primary-light);color:var(--primary-dark);}
+  .acct-layout{display:flex;gap:24px;align-items:flex-start;}
+  .kv-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-soft);font-size:13px;gap:12px;}
+  .kv-row .k{color:var(--text-faint);}
+  .kv-row .v{font-weight:600;text-align:left;}
+
+  /* CHART */
+  .chart-wrap{width:100%;overflow-x:auto;}
+  .chart-legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);margin-top:12px;}
+  .chart-legend .lg-item{display:flex;align-items:center;gap:6px;}
+  .chart-legend .lg-dot{width:10px;height:10px;border-radius:3px;}
+
+  .bank-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+  .bank-card{border-radius:16px;padding:18px 20px;color:#fff;min-height:120px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;}
+  .bank-card::after{content:'';position:absolute;left:-30px;bottom:-30px;width:130px;height:130px;background:rgba(255,255,255,.08);border-radius:50%;}
+  .bank-card .bc-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;position:relative;z-index:1;}
+  .bank-card .bc-top svg{width:20px;height:20px;opacity:.9;}
+  .bank-card .bc-number{font-size:16px;letter-spacing:1px;font-weight:700;margin:16px 0 8px;direction:ltr;text-align:right;position:relative;z-index:1;}
+  .bank-card .bc-bottom{display:flex;justify-content:space-between;align-items:flex-end;font-size:11px;opacity:.92;position:relative;z-index:1;}
+  .bank-card .bc-del{position:absolute;top:10px;left:10px;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;z-index:2;opacity:0;transition:opacity .12s;}
+  .bank-card:hover .bc-del{opacity:1;}
+  .bank-card .bc-del svg{width:13px;height:13px;}
+
+  .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .gallery-item{height:80px;border-radius:10px;position:relative;overflow:hidden;}
+  .gallery-item.cover{outline:3px solid var(--gold);outline-offset:-3px;}
+  .gallery-item .gi-label{position:absolute;top:6px;right:6px;background:var(--gold);color:#fff;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;}
+  .gallery-item .gi-del{position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:7px;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .12s;}
+  .gallery-item:hover .gi-del{opacity:1;}
+  .gallery-item .gi-del svg{width:11px;height:11px;}
+  .gallery-item .gi-setcover{position:absolute;bottom:4px;right:4px;background:rgba(255,255,255,.92);color:var(--text);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;cursor:pointer;opacity:0;transition:opacity .12s;}
+  .gallery-item:hover .gi-setcover{opacity:1;}
+
+  /* PAGINATION */
+  .pager{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:20px;flex-wrap:wrap;}
+  .pager button{min-width:34px;height:34px;padding:0 10px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;}
+  .pager button:hover:not(:disabled){background:var(--surface-alt);color:var(--text);}
+  .pager button.active{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;}
+  .pager button:disabled{opacity:.45;cursor:not-allowed;}
+  .pager .pager-info{font-size:12px;color:var(--text-faint);margin:0 8px;}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1A1E24;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 12px 32px -8px rgba(0,0,0,.4);z-index:200;opacity:0;transition:all .25s;max-width:420px;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast svg{width:16px;height:16px;flex-shrink:0;}
+  .toast.toast-success svg{color:#6BD5A7;}
+  .toast.toast-error{background:#5A1A14;}
+  .toast.toast-error svg{color:#FFB8AC;}
+  .toast.toast-info{background:#153A56;}
+  .toast.toast-info svg{color:#9BCBF0;}
+
+  /* CONFIRM */
+  .confirm-modal{background:var(--surface);border-radius:18px;width:100%;max-width:440px;padding:24px;box-shadow:0 30px 60px -20px rgba(0,0,0,.35);}
+  .confirm-icon{width:48px;height:48px;border-radius:14px;background:var(--danger-light);color:var(--danger);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+  .confirm-icon svg{width:22px;height:22px;}
+  .confirm-title{font-size:15px;font-weight:800;margin-bottom:6px;}
+  .confirm-msg{font-size:13px;color:var(--text-muted);line-height:1.8;margin-bottom:20px;}
+  .confirm-actions{display:flex;gap:8px;justify-content:flex-end;}
+
+  /* EXPERT COMMENT */
+  .expert-box{background:var(--gold-light);border:1px solid #EEDDB6;border-radius:12px;padding:14px 16px;margin-top:6px;}
+  .expert-box .ex-title{font-size:12.5px;font-weight:800;color:var(--gold);display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+  .expert-box .ex-title svg{width:14px;height:14px;}
+  .expert-box .ex-text{font-size:13px;color:var(--text);line-height:1.9;}
+  .expert-box .ex-meta{font-size:11px;color:var(--text-faint);margin-top:8px;padding-top:8px;border-top:1px dashed #EEDDB6;}
+
+  @media(max-width:1100px){
+    .form-grid{grid-template-columns:1fr;}
+    .acct-layout{flex-direction:column;}
+    .acct-tabs{flex-direction:row;width:100%;overflow-x:auto;}
+  }
+
+  /* ============ ADMIN PANEL EXTENSIONS ============ */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px;}
+  .stat-card{padding:16px 18px;display:flex;flex-direction:column;gap:7px;}
+  .stat-card .st-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .stat-card .st-label{font-size:12px;color:var(--text-muted);font-weight:600;}
+  .stat-card .st-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .stat-card .st-icon svg{width:17px;height:17px;}
+  .stat-card .st-val{font-size:21px;font-weight:800;color:var(--text);}
+  .stat-card .st-val small{font-size:11px;font-weight:600;color:var(--text-faint);margin-right:4px;}
+  .stat-card .st-sub{font-size:11.5px;color:var(--text-faint);}
+  .stat-card.clickable{cursor:pointer;transition:box-shadow .15s,transform .15s;}
+  .stat-card.clickable:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+
+  .filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .search-box{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;flex:1;min-width:220px;max-width:340px;}
+  .search-box svg{width:15px;height:15px;color:var(--text-faint);flex-shrink:0;}
+  .search-box input{border:none;outline:none;background:none;flex:1;font-size:13px;color:var(--text);min-width:0;}
+  .chip-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .chip{padding:7px 13px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:12.5px;font-weight:600;color:var(--text-muted);cursor:pointer;white-space:nowrap;}
+  .chip:hover{background:var(--surface-alt);}
+  .chip.active{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;}
+
+  .tgl-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 18px;border-bottom:1px solid var(--border-soft);}
+  .tgl-row:last-child{border-bottom:none;}
+  .tgl-info .tgl-title{font-size:13.5px;font-weight:700;}
+  .tgl-info .tgl-desc{font-size:12px;color:var(--text-faint);margin-top:2px;}
+  .tgl{width:44px;height:24px;border-radius:20px;background:var(--border);position:relative;cursor:pointer;transition:background .15s;flex-shrink:0;border:none;}
+  .tgl::after{content:'';position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:right .15s;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  .tgl.on{background:var(--primary);}
+  .tgl.on::after{right:23px;}
+
+  .role-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--surface-alt);color:var(--text-muted);white-space:nowrap;}
+  .role-chip.r-investor{background:var(--primary-light);color:var(--primary-dark);}
+  .role-chip.r-builder{background:var(--gold-light);color:var(--gold);}
+  .role-chip.r-expert{background:var(--info-light);color:var(--info);}
+  .role-chip.r-admin{background:#EFEAF7;color:#5F3E96;}
+  .role-chip.r-super{background:#FDE4E4;color:#B3392C;}
+
+  .detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;}
+  .detail-cell{background:var(--surface-alt);border:1px solid var(--border-soft);border-radius:10px;padding:12px 14px;}
+  .detail-cell .dc-k{font-size:11px;color:var(--text-faint);margin-bottom:4px;}
+  .detail-cell .dc-v{font-size:13.5px;font-weight:700;}
+
+  .cmp-wrap{display:flex;flex-direction:column;gap:6px;min-width:150px;}
+  .cmp-row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-muted);}
+  .cmp-row b{color:var(--text);font-weight:700;}
+  .cmp-bar{display:flex;height:9px;border-radius:20px;overflow:hidden;background:var(--border-soft);}
+  .cmp-bar i{display:block;height:100%;}
+
+  .row-btns{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;}
+  table.dt td .row-btns button{white-space:nowrap;}
+  td.num{font-variant-numeric:tabular-nums;white-space:nowrap;}
+
+  .sec-card{overflow:hidden;}
+  .sec-head{padding:16px 18px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;gap:10px;}
+  .sec-head .sh-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .sec-head .sh-icon svg{width:17px;height:17px;}
+  .sec-head .sh-title{font-weight:800;font-size:13.5px;}
+  .sec-head .sh-desc{font-size:11.5px;color:var(--text-faint);margin-top:1px;}
+
+  .msg-bubble{background:var(--surface-alt);border:1px solid var(--border-soft);border-radius:12px;padding:10px 14px;font-size:12.5px;color:var(--text-muted);line-height:1.8;}
+  .msg-bubble.agent{background:var(--primary-light);border-color:#CFE3DC;color:var(--primary-dark);}
+  .msg-meta{font-size:11px;color:var(--text-faint);margin-bottom:5px;display:flex;gap:8px;}
+
+  .code-pill{display:inline-block;background:var(--surface-alt);border:1px solid var(--border);border-radius:7px;padding:2px 8px;font-size:11.5px;color:var(--text-muted);direction:ltr;}
+  .queue-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--border-soft);}
+  .queue-row:first-of-type{border-top:none;}
+  .q-title{font-size:13px;font-weight:700;}
+  .q-sub{font-size:11.5px;color:var(--text-faint);margin-top:2px;}
+  .dash-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:1100px){ .dash-2col{grid-template-columns:1fr;} }
+  .cell-title{font-size:12.5px;font-weight:700;}
+  .token-panel{background:var(--primary-light);border:1px solid rgba(31,92,76,.18);border-radius:12px;padding:16px 18px;margin-bottom:16px;}
+  .token-panel .tp-title{font-size:13.5px;font-weight:800;color:var(--primary-dark);display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .msg-meta{font-size:10.5px;color:var(--text-faint);margin-top:5px;}
+  .chat-box{display:flex;flex-direction:column;gap:10px;padding:16px 18px;max-height:300px;overflow-y:auto;}
+
+  /* ---- super-admin extras ---- */
+  .staff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+  .staff-card{display:flex;flex-direction:column;gap:10px;}
+  .staff-top{display:flex;align-items:center;gap:12px;}
+  .staff-av{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}
+  .staff-name{font-size:13.5px;font-weight:800;}
+  .staff-sub{font-size:11.5px;color:var(--text-faint);margin-top:2px;}
+  .staff-meta{display:flex;flex-direction:column;gap:5px;padding-top:10px;border-top:1px solid var(--border-soft);}
+  .staff-meta div{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);}
+  .staff-meta b{color:var(--text);font-weight:700;}
+  .perm-yes{color:var(--primary);font-weight:800;}
+  .perm-no{color:var(--text-faint);font-weight:600;}
+  .log-act{font-size:11.5px;color:var(--text-muted);margin-top:2px;line-height:1.7;}
+  .log-sev{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:12px;white-space:nowrap;}
+  .log-sev.s-high{background:var(--danger-light);color:var(--danger);}
+  .log-sev.s-med{background:var(--warning-light);color:var(--warning);}
+  .log-sev.s-low{background:var(--surface-alt);color:var(--text-muted);}
+  .role-picker{display:flex;gap:8px;flex-wrap:wrap;}
+  .role-opt{flex:1;min-width:120px;border:1.5px solid var(--border);border-radius:12px;padding:11px 12px;text-align:right;background:var(--surface);cursor:pointer;transition:.15s;}
+  .role-opt.sel{border-color:var(--primary);background:var(--primary-light);}
+  .role-opt .ro-t{font-size:12.5px;font-weight:800;}
+  .role-opt .ro-d{font-size:10.5px;color:var(--text-faint);margin-top:2px;line-height:1.6;}
+  .pipe{display:flex;align-items:center;gap:0;margin-bottom:16px;flex-wrap:wrap;}
+  .pipe-step{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--text-muted);}
+  .pipe-step .pn{width:20px;height:20px;border-radius:50%;background:var(--primary-light);color:var(--primary-dark);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+  .pipe-arrow{color:var(--text-faint);padding:0 8px;display:inline-flex;}
+  .pipe-arrow svg{width:14px;height:14px;}
+  .badge-info{background:var(--info-light);color:var(--info);}
+</style>
+
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+/* ===================== ICONS ===================== */
+const I = {
+  building:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16"/><path d="M2 21h20"/><path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg>`,
+  coin:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2c0-1 1-1.7 2.5-1.7s2.5.8 2.5 1.7-1 1.4-2.5 1.8-2.5.9-2.5 1.8 1 1.7 2.5 1.7 2.5-.7 2.5-1.7"/></svg>`,
+  wallet:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3"/><path d="M3 7v11a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-4a2.5 2.5 0 0 0 0 5h5"/></svg>`,
+  chart:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>`,
+  chat:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
+  bell:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>`,
+  user:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
+  users:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4h-5a4 4 0 0 0-4 4v2"/><circle cx="10.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  plus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>`,
+  pin:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>`,
+  x:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`,
+  check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
+  clock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
+  warn:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>`,
+  info:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>`,
+  upload:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 9l5-5 5 5M12 4v12"/></svg>`,
+  search:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>`,
+  grid:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>`,
+  doc:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>`,
+  shield:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>`,
+  edit:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+  trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>`,
+  eye:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  send:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>`,
+  refresh:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>`,
+  lock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+  key:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></svg>`,
+  activity:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`,
+  cal:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`,
+  chevLeft:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>`,
+  hash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>`,
+
+};
+/* ===================== DATA ===================== */
+const PROJECTS = [
+  {id:'p1', name:'برج مروارید لاهیجان', city:'لاهیجان، گیلان', type:'res', status:'active', builder:'علیرضا مرادی — ساختمانی نگین بنای پارسیان',
+   cover:'linear-gradient(135deg,#1F5C4C,#3A8067)', currentStage:'اسکلت', progress:46,
+   raised:18200, totalCapital:40000, sold:4550, totalTokens:10000, tokenPrice:4000000,
+   desc:'مجتمع مسکونی ۱۲ طبقه با ۸۴ واحد در منطقه ساحلی لاهیجان، با متراژهای ۹۵ تا ۱۸۰ متر و امکانات کامل رفاهی شامل استخر، سالن ورزشی و پارکینگ اختصاصی.',
+   tech:{land:'۲,۴۰۰ متر مربع', building:'۱۸,۶۰۰ متر مربع', floors:'۱۲', units:'۸۴', parking:'۹۶', usage:'مسکونی', start:'۱۴۰۲/۰۹/۰۱', duration:'۲۲ ماه', delivery:'۱۴۰۴/۰۷/۰۱'},
+   stages:[
+     {t:'خرید زمین', status:'done', weight:5, report:'سند زمین به نام شرکت ثبت و مالکیت قطعی گردید.'},
+     {t:'اخذ مجوز', status:'done', weight:8, report:'پروانه ساخت از شهرداری لاهیجان دریافت شد.'},
+     {t:'گودبرداری', status:'done', weight:10, report:'عملیات گودبرداری کامل و پایدارسازی گود انجام شد.'},
+     {t:'فونداسیون', status:'done', weight:15, report:'فونداسیون کامل بتن‌ریزی و آزمایش مغزه‌گیری تأیید شد.'},
+     {t:'اسکلت', status:'active', weight:25, report:'تا طبقه هفتم اسکلت بتنی اجرا شده؛ گزارش پیشرفت این هفته در انتظار بررسی کارشناس است.'},
+     {t:'سفت‌کاری', status:'todo', weight:20},{t:'نازک‌کاری', status:'todo', weight:12},{t:'تحویل', status:'todo', weight:5},
+   ],
+   docs:[
+     {cat:'مدارک مالکیت', name:'سند تک‌برگ زمین', date:'۱۴۰۲/۰۸/۲۰', status:'approved'},
+     {cat:'مجوزها', name:'پروانه ساخت شهرداری', date:'۱۴۰۲/۱۱/۰۵', status:'approved'},
+     {cat:'نقشه‌های سازه', name:'محاسبات و نقشه سازه', date:'۱۴۰۲/۱۰/۱۸', status:'approved'},
+     {cat:'ضمانت‌نامه‌ها', name:'ضمانت‌نامه حسن انجام کار', date:'۱۴۰۳/۰۳/۰۲', status:'revision',
+      expertComment:'ضمانت‌نامه ارسالی فاقد مهر و امضای معتبر بانک صادرکننده است. لطفاً نسخه اصلی اسکن‌شده با مهر برجسته بانک را مجدداً ارسال نمایید.'},
+   ]},
+  {id:'p2', name:'مجتمع تجاری اداری ونداد', city:'تهران، ونک', type:'com', status:'pending', builder:'شرکت ساختمانی آرکان توسعه',
+   cover:'linear-gradient(135deg,#2B5A82,#4C7EA8)', currentStage:'اخذ مجوز', progress:8,
+   raised:0, totalCapital:65000, sold:0, totalTokens:13000, tokenPrice:5000000,
+   desc:'برج تجاری-اداری ۱۸ طبقه با دسترسی مستقیم به بزرگراه، شامل ۶ طبقه تجاری و ۱۲ طبقه اداری با نمای شیشه‌ای دوجداره.',
+   tech:{land:'۱,۸۰۰ متر مربع', building:'۲۶,۰۰۰ متر مربع', floors:'۱۸', units:'۶۰', parking:'۱۴۰', usage:'تجاری/اداری', start:'در انتظار مجوز', duration:'۳۰ ماه (تخمینی)', delivery:'۱۴۰۶/۰۲/۰۱'},
+   stages:[
+     {t:'خرید زمین', status:'done', weight:6, report:'زمین با سند تجاری خریداری و ثبت شد.'},
+     {t:'اخذ مجوز', status:'active', weight:9, report:'پرونده در کمیسیون ماده پنج شهرداری در حال بررسی است.'},
+   ],
+   docs:[
+     {cat:'مدارک مالکیت', name:'سند مالکیت زمین تجاری', date:'۱۴۰۳/۰۳/۰۲', status:'approved'},
+     {cat:'مجوزها', name:'استعلام کمیسیون ماده پنج', date:'۱۴۰۳/۰۵/۰۱', status:'pending'},
+     {cat:'نقشه‌های معماری', name:'نقشه‌های اولیه معماری', date:'۱۴۰۳/۰۴/۲۰', status:'pending'},
+   ]},
+  {id:'p3', name:'شهرک نگین کیش', city:'کیش، هرمزگان', type:'mix', status:'revision', builder:'علیرضا مرادی — ساختمانی نگین بنای پارسیان',
+   cover:'linear-gradient(135deg,#AD7C2B,#D3A854)', currentStage:'فونداسیون', progress:22,
+   raised:6100, totalCapital:28000, sold:1220, totalTokens:7000, tokenPrice:4000000,
+   desc:'مجموعه ویلایی-آپارتمانی ساحلی در جزیره کیش با ۴۰ واحد و دسترسی به ساحل اختصاصی.',
+   tech:{land:'۳,۱۰۰ متر مربع', building:'۹,۸۰۰ متر مربع', floors:'۴', units:'۴۰', parking:'۵۰', usage:'مسکونی مختلط', start:'۱۴۰۲/۱۲/۱۰', duration:'۱۸ ماه', delivery:'۱۴۰۴/۰۶/۱۰'},
+   stages:[
+     {t:'خرید زمین', status:'done', weight:7, report:'زمین ساحلی خریداری شد.'},
+     {t:'اخذ مجوز', status:'done', weight:9, report:'مجوز از سازمان منطقه آزاد کیش اخذ شد.'},
+     {t:'گودبرداری', status:'done', weight:11, report:'گودبرداری کامل انجام شد.'},
+     {t:'فونداسیون', status:'active', weight:16, report:'مدارک ضمانت‌نامه این مرحله توسط کارشناس رد شد و نیاز به اصلاح دارد.'},
+   ],
+   docs:[
+     {cat:'مدارک مالکیت', name:'سند مالکیت ساحلی', date:'۱۴۰۲/۱۰/۲۲', status:'approved'},
+     {cat:'ضمانت‌نامه‌ها', name:'ضمانت‌نامه بانکی مرحله فونداسیون', date:'۱۴۰۳/۰۱/۲۵', status:'revision',
+      expertComment:'مبلغ ضمانت‌نامه با مبلغ مندرج در قرارداد پیمانکار مطابقت ندارد. مبلغ ضمانت‌نامه باید حداقل ۲۰٪ مبلغ قرارداد باشد.'},
+   ]},
+  {id:'p4', name:'برج اداری آرکا اصفهان', city:'اصفهان', type:'off', status:'done', builder:'شرکت توسعه ملک آرکا',
+   cover:'linear-gradient(135deg,#153F34,#1F5C4C)', currentStage:'تحویل', progress:100,
+   raised:52000, totalCapital:52000, sold:10400, totalTokens:10400, tokenPrice:5000000,
+   desc:'برج اداری کلاس A در محور چهارباغ اصفهان با ۱۴ طبقه دفتر کار و لابی مدرن، پروژه با موفقیت تکمیل و تحویل داده شد.',
+   tech:{land:'۱,۲۰۰ متر مربع', building:'۱۴,۵۰۰ متر مربع', floors:'۱۴', units:'۵۶', parking:'۸۰', usage:'اداری', start:'۱۴۰۱/۰۷/۱۵', duration:'۲۴ ماه', delivery:'۱۴۰۳/۰۷/۱۵'},
+   stages:[
+     {t:'خرید زمین', status:'done', weight:5, report:'انجام شد.'},{t:'اخذ مجوز', status:'done', weight:8, report:'انجام شد.'},
+     {t:'گودبرداری', status:'done', weight:10, report:'انجام شد.'},{t:'فونداسیون', status:'done', weight:15, report:'انجام شد.'},
+     {t:'اسکلت', status:'done', weight:25, report:'انجام شد.'},{t:'سفت‌کاری', status:'done', weight:20, report:'انجام شد.'},
+     {t:'نازک‌کاری', status:'done', weight:12, report:'انجام شد.'},{t:'تحویل', status:'done', weight:5, report:'تحویل نهایی به سرمایه‌گذاران و بستن پروژه.'},
+   ],
+   docs:[
+     {cat:'مدارک مالکیت', name:'سند نهایی تفکیکی', date:'۱۴۰۳/۰۷/۱۰', status:'approved'},
+     {cat:'سایر مدارک', name:'گواهی پایان کار', date:'۱۴۰۳/۰۶/۲۰', status:'approved'},
+   ]},
+];
+const PROJ_TYPE = {res:'مسکونی', com:'تجاری/اداری', mix:'مختلط', off:'اداری'};
+const PROJ_STATUS = {
+  active:{l:'فعال', c:'badge-active'}, pending:{l:'در انتظار تأیید', c:'badge-pending'},
+  revision:{l:'نیازمند اصلاح', c:'badge-revision'}, done:{l:'پایان‌یافته', c:'badge-done'},
+  draft:{l:'پیش‌نویس', c:'badge-draft'}, rejected:{l:'رد شده', c:'badge-rejected'},
+};
+const DOC_STATUS = {
+  approved:{l:'تأیید شده', c:'badge-active'}, pending:{l:'در انتظار بررسی', c:'badge-pending'},
+  revision:{l:'نیازمند اصلاح', c:'badge-revision'}, rejected:{l:'رد شده', c:'badge-rejected'},
+};
+const REL_STATUS = {
+  pending:{l:'در انتظار بررسی', c:'badge-pending'},
+  approved:{l:'تأیید شده — نیازمند انجام دستی', c:'badge-revision'},
+  done:{l:'انجام شد — رسید ثبت شد', c:'badge-active'},
+  rejected:{l:'رد شده', c:'badge-rejected'}, hold:{l:'به تعویق (بازدید مجدد)', c:'badge-pending'},
+};
+const KYC_STATUS = {
+  pending:{l:'در انتظار بررسی', c:'badge-pending'}, verified:{l:'تأیید شده', c:'badge-active'},
+  rejected:{l:'رد شده', c:'badge-rejected'},
+};
+const ROLE_META = {
+  investor:{l:'سرمایه‌گذار', c:'r-investor'}, builder:{l:'انبوه‌ساز', c:'r-builder'},
+  expert:{l:'کارشناس', c:'r-expert'}, admin:{l:'ادمین', c:'r-admin'}, super:{l:'سوپر ادمین', c:'r-super'},
+};
+const REPORT_STATUS = {
+  pending:{l:'در انتظار بررسی', c:'badge-pending'}, approved:{l:'تأیید شده', c:'badge-active'},
+  rejected:{l:'رد شده', c:'badge-rejected'},
+};
+
+const REQ_TYPE = {
+  purchase:{l:'خرید توکن', c:'badge-active', ic:'cart'},
+  refund:{l:'بازپرداخت وجه', c:'badge-revision', ic:'undo'},
+  resale:{l:'فروش بازار ثانویه', c:'badge-done', ic:'activity'},
+  withdraw:{l:'برداشت وجه', c:'badge-info', ic:'wallet'},
+};
+const REQ_STATUS = {
+  pending:{l:'در انتظار بررسی', c:'badge-pending'},
+  approved:{l:'تأیید شده — نیازمند انجام دستی', c:'badge-revision'},
+  done:{l:'انجام شد — رسید ثبت شد', c:'badge-active'},
+  rejected:{l:'رد شده', c:'badge-rejected'},
+};
+const REQUESTS = [
+  {id:'q1', ref:'REQ-۹۱۰۲۳۱', type:'purchase', user:'نگار احمدی', phone:'۰۹۱۲۳۴۵۶۷۸۹', project:'p1', qty:10, amount:40000000, date:'۱۴۰۳/۰۷/۱۸ — ۱۴:۲۲', method:'درگاه بانک ملت', status:'pending', note:'پرداخت موفق — کد پیگیری ۷۷۱۱۲۲۳۳. نیازمند تأیید و تخصیص دستی خشت.'},
+  {id:'q2', ref:'REQ-۹۱۰۲۲۸', type:'purchase', user:'مهدی کریمی', phone:'۰۹۳۵۱۱۲۲۳۳۴', project:'p1', qty:25, amount:100000000, date:'۱۴۰۳/۰۷/۱۸ — ۱۱:۰۵', method:'درگاه بانک ملت', status:'pending', note:'پرداخت موفق — کد پیگیری ۸۸۲۳۳۰۱۱. مبلغ بالا، نیازمند بررسی کارشناس.'},
+  {id:'q3', ref:'REQ-۹۱۰۲۱۵', type:'refund', user:'علیرضا مرادی', phone:'۰۹۱۲۱۱۱۳۳۴۴', project:'p3', qty:0, amount:24000000, date:'۱۴۰۳/۰۷/۱۷ — ۱۹:۴۰', method:'انتقال به شبا انبوه‌ساز', status:'pending', note:'بازپرداخت وجه مرحله لغوشده — درخواست بازگشت بخشی از سرمایه انبوه‌ساز.'},
+  {id:'q4', ref:'REQ-۹۱۰۱۹۸', type:'resale', user:'زهرا عبداللهی', phone:'۰۹۱۹۸۸۷۷۶۶۵', project:'p1', qty:6, amount:27000000, date:'۱۴۰۳/۰۷/۱۷ — ۰۹:۱۲', method:'تسویه بازار ثانویه', status:'pending', note:'فروش ۶ خشت در بازار ثانویه — مبلغ نزد کارشناس سپرده شده است.'},
+  {id:'q5', ref:'REQ-۹۱۰۱۷۶', type:'withdraw', user:'حسین رستمی', phone:'۰۹۰۲۹۹۸۸۷۷۶', project:'p1', qty:0, amount:16000000, date:'۱۴۰۳/۰۷/۱۶ — ۱۶:۳۰', method:'انتقال به شبا سرمایه‌گذار', status:'approved', note:'برداشت موجودی کیف پول — تأیید شده و در انتظار واریز دستی.', exec:null},
+  {id:'q6', ref:'REQ-۹۱۰۱۴۰', type:'purchase', user:'فاطمه نوری', phone:'۰۹۳۸۱۲۳۴۵۶۷', project:'p3', qty:15, amount:60000000, date:'۱۴۰۳/۰۷/۱۵ — ۱۶:۳۰', method:'درگاه بانک ملی', status:'done', note:'پرداخت موفق — کد پیگیری ۳۳۴۴۵۵۶۶.',
+   exec:{by:'سارا موسوی', receipt:'ب۴-۸۸۲۲۰۷۷', date:'۱۴۰۳/۰۷/۱۵ — ۱۸:۰۵', note:'خشت‌ها به کیف پول سرمایه‌گذار منتقل و رسید واریز ثبت شد.'}},
+  {id:'q7', ref:'REQ-۹۱۰۱۲۲', type:'refund', user:'کیان عباسی', phone:'۰۹۱۷۴۴۵۵۶۶۷', project:'p4', qty:0, amount:18500000, date:'۱۴۰۳/۰۷/۱۴ — ۲۰:۱۰', method:'انتقال به شبا انبوه‌ساز', status:'approved', note:'لغو مرحله دوم پروژه — بازپرداخت متناسب با پیشرفت پروژه.', exec:null},
+  {id:'q8', ref:'REQ-۹۱۰۰۹۵', type:'resale', user:'علی صادقی', phone:'۰۹۳۶۲۲۳۳۴۴۵', project:'p4', qty:8, amount:40000000, date:'۱۴۰۳/۰۷/۱۲ — ۱۳:۱۵', method:'تسویه بازار ثانویه', status:'done', note:'فروش ۸ خشت در بازار ثانویه.',
+   exec:{by:'سارا موسوی', receipt:'ب۴-۸۸۲۲۹۰۱', date:'۱۴۰۳/۰۷/۱۲ — ۱۵:۴۰', note:'مبلغ به فروشنده واریز و خشت‌ها به خریدار منتقل شد.'}},
+  {id:'q9', ref:'REQ-۹۰۹۸۷۰', type:'purchase', user:'مریم جعفری', phone:'۰۹۰۱۲۲۳۳۴۴۵', project:'p4', qty:20, amount:100000000, date:'۱۴۰۳/۰۷/۱۰ — ۰۹:۲۰', method:'درگاه بانک سامان', status:'rejected', reason:'مغایرت بین مبلغ پرداختی و مبلغ اعلامی درگاه؛ تراکنش تکراری تشخیص داده شد.', note:'مبلغ پرداختی به حساب سرمایه‌گذار بازگشت داده شد.'},
+];
+const MKT_STATUS = {
+  pending:{l:'در انتظار تأیید عرضه', c:'badge-pending'},
+  active:{l:'تأیید شد — در انتظار خریدار', c:'badge-revision'},
+  settle:{l:'خرید ثبت شد — نیازمند تسویه دستی', c:'badge-active'},
+  done:{l:'تسویه شد', c:'badge-done'},
+  rejected:{l:'رد شده', c:'badge-rejected'},
+};
+const MARKET = [
+  {id:'m1', ref:'MKT-۹۲۰۱۱۷', seller:'زهرا عبداللهی', buyer:'نیلوفر تقوی', project:'p1', qty:6, unit:4500000, amount:27000000, date:'۱۴۰۳/۰۷/۱۷ — ۰۹:۱۲', status:'settle', note:'عرضه ۶ خشت برج مروارید با قیمت توافق‌شده ۴,۵۰۰,۰۰۰ تومان برای هر خشت.', exec:null},
+  {id:'m2', ref:'MKT-۹۲۰۱۱۰', seller:'علی صادقی', buyer:'بهنام کاظمی', project:'p4', qty:8, unit:5000000, amount:40000000, date:'۱۴۰۳/۰۷/۱۲ — ۱۳:۱۵', status:'done', note:'فروش ۸ خشت شهرک نگین کیش.',
+   exec:{by:'سارا موسوی', receipt:'ب۴-۸۸۲۲۹۰۱', date:'۱۴۰۳/۰۷/۱۲ — ۱۵:۴۰', note:'مبلغ به فروشنده واریز و خشت‌ها به خریدار منتقل شد.'}},
+  {id:'m3', ref:'MKT-۹۲۰۱۳۲', seller:'حسین رستمی', buyer:'', project:'p1', qty:4, unit:4200000, amount:16800000, date:'۱۴۰۳/۰۷/۱۸ — ۱۰:۳۰', status:'active', note:'عرضه ۴ خشت — بدون خریدار تاکنون.', exec:null},
+  {id:'m4', ref:'MKT-۹۲۰۱۳۵', seller:'مریم جعفری', buyer:'', project:'p3', qty:12, unit:4600000, amount:55200000, date:'۱۴۰۳/۰۷/۱۸ — ۰۸:۱۵', status:'pending', note:'عرضه جدید — نیازمند بررسی و تأیید کارشناس یا ادمین.', exec:null},
+  {id:'m5', ref:'MKT-۹۲۰۱۰۴', seller:'فاطمه نوری', buyer:'رضا قاسمی', project:'p1', qty:10, unit:4400000, amount:44000000, date:'۱۴۰۳/۰۷/۱۴ — ۱۱:۵۰', status:'done', note:'فروش ۱۰ خشت برج مروارید.',
+   exec:{by:'سارا موسوی', receipt:'ب۴-۸۸۲۲۶۱۰', date:'۱۴۰۳/۰۷/۱۴ — ۱۳:۲۰', note:'تسویه کامل — انتقال خشت‌ها به کیف پول خریدار ثبت شد.'}},
+  {id:'m6', ref:'MKT-۹۲۰۱۲۱', seller:'نگار احمدی', buyer:'', project:'p4', qty:5, unit:5100000, amount:25500000, date:'۱۴۰۳/۰۷/۱۵ — ۱۴:۰۵', status:'rejected', reason:'قیمت عرضه ۱۲٪ بالاتر از قیمت پایه پروژه است؛ عرضه با این قیمت قابل تأیید نیست.', note:'عرضه رد شد.', exec:null},
+];
+
+/* درخواست‌های آزادسازی وجه */
+const RELEASES = [
+  {id:'r1', project:'p1', builder:'علیرضا مرادی', phase:'اسکلت', amount:650000000, plannedPct:46, actualPct:43,
+   date:'۱۴۰۳/۰۷/۱۷', docsCount:5, status:'pending',
+   docs:['گزارش تصویری پیشرفت — طبقه هفتم','گزارش کارشناس پیمان','نقص مصالح مصرفی','ضمانت‌نامه این مرحله','صورتحساب بتن‌ریزی'],
+   note:'پیشرفت واقعی ۳٪ کمتر از برنامه زمان‌بندی است؛ اختلاف با توجه به تأخیر در تأمین میلگرد در حد قابل‌قبول است.'},
+  {id:'r2', project:'p3', builder:'علیرضا مرادی', phase:'فونداسیون', amount:420000000, plannedPct:22, actualPct:22,
+   date:'۱۴۰۳/۰۷/۱۵', docsCount:4, status:'pending',
+   docs:['گزارش تصویری فونداسیون','آزمایش بتن (اسلامپ)','صورتحساب مصالح','ضمانت‌نامه بانکی'],
+   note:'پیشرفت واقعی دقیقاً مطابق برنامه زمان‌بندی است.'},
+  {id:'r3', project:'p1', builder:'علیرضا مرادی', phase:'فونداسیون', amount:500000000, plannedPct:30, actualPct:31,
+   date:'۱۴۰۳/۰۵/۲۰', docsCount:6, status:'approved',
+   docs:['گزارش تصویری فونداسیون','آزمایش مغزه‌گیری بتن','صورتحساب مصالح','ضمانت‌نامه بانکی','گزارش کارشناس مستقل','تأییدیه شهرداری'],
+   note:'مستندات کامل و مطابقت دارد.'},
+  {id:'r4', project:'p3', builder:'علیرضا مرادی', phase:'گودبرداری', amount:180000000, plannedPct:11, actualPct:14,
+   date:'۱۴۰۳/۰۲/۰۸', docsCount:3, status:'done',
+   exec:{by:'سارا موسوی', receipt:'ب۴-۸۸۲۳۰۸۸', date:'۱۴۰۳/۰۲/۰۹ — ۱۰:۱۵', note:'مبلغ به شبا شرکت انبوه‌ساز واریز شد.'},
+   docs:['گزارش تصویری گودبرداری','صورتحساب ماشین‌آلات','گواهی پایدارسازی گود'],
+   note:'بدون نقص.'},
+  {id:'r5', project:'p2', builder:'شرکت ساختمانی آرکان توسعه', phase:'اخذ مجوز', amount:0, plannedPct:8, actualPct:5,
+   date:'۱۴۰۳/۰۷/۱۰', docsCount:2, status:'hold',
+   docs:['استعلام ناقص کمیسیون ماده پنج','نامه شهرداری'],
+   note:'پروژه هنوز پروانه ساخت نگرفته است؛ آزادسازی وجه تا زمان دریافت پروانه ممکن نیست.'},
+];
+
+/* گزارش‌های ماهانه پیشرفت */
+const REPORTS = [
+  {id:'rp1', project:'p1', month:'مرداد ۱۴۰۳', title:'گزارش پیشرفت اسکلت — طبقه هفتم', date:'۱۴۰۳/۰۷/۱۰', status:'pending', summary:'اجرای اسکلت طبقه هفتم تا ۸۰٪ پیش رفته و میلگردگذاری طبقه هشتم آغاز شده است.'},
+  {id:'rp2', project:'p3', month:'مرداد ۱۴۰۳', title:'گزارش پیشرفت فونداسیون — پایان مرحله', date:'۱۴۰۳/۰۷/۰۸', status:'pending', summary:'فونداسیون کامل بتن‌ریزی شد و آزمایش‌های مقاومت در حد استاندارد گزارش شده‌اند.'},
+  {id:'rp3', project:'p1', month:'تیر ۱۴۰۳', title:'گزارش پیشرفت اسکلت — طبقه پنجم', date:'۱۴۰۳/۰۶/۱۲', status:'approved', summary:'اسکلت تا طبقه پنجم تکمیل و تأیید شد.'},
+  {id:'rp4', project:'p4', month:'خرداد ۱۴۰۳', title:'گزارش تکمیل پروژه و تحویل', date:'۱۴۰۳/۰۶/۰۵', status:'approved', summary:'پروژه به طور کامل تکمیل و تحویل سرمایه‌گذاران گردید.'},
+];
+/* مرکز احراز هویت */
+const KYCS = [
+  {id:'k1', name:'نگار احمدی', role:'investor', date:'۱۴۰۳/۰۷/۱۶', status:'pending',
+   docs:[{n:'کارت ملی (رو)', s:'pending'},{n:'کارت ملی (پشت)', s:'pending'},{n:'عکس کاربر', s:'approved'},{n:'تأیید شماره موبایل', s:'approved'}]},
+  {id:'k2', name:'مهدی کریمی', role:'investor', date:'۱۴۰۳/۰۷/۱۴', status:'pending',
+   docs:[{n:'کارت ملی (رو)', s:'approved'},{n:'کارت ملی (پشت)', s:'approved'},{n:'عکس کاربر', s:'pending'},{n:'شماره شبا', s:'pending'}]},
+  {id:'k3', name:'شرکت ساختمانی آرکان توسعه', role:'builder', date:'۱۴۰۳/۰۷/۱۲', status:'pending',
+   docs:[{n:'آگهی تأسیس شرکت', s:'pending'},{n:'کد اقتصادی', s:'pending'},{n:'مدرک نمایندگی و صاحب امضا', s:'pending'},{n:'پروانه کسب / مجوز ساختمانی', s:'pending'},{n:'شماره شبا شرکت', s:'approved'}]},
+  {id:'k4', name:'زهرا عبداللهی', role:'investor', date:'۱۴۰۳/۰۶/۲۸', status:'verified',
+   docs:[{n:'کارت ملی (رو)', s:'approved'},{n:'کارت ملی (پشت)', s:'approved'},{n:'عکس کاربر', s:'approved'},{n:'تأیید شماره موبایل', s:'approved'}]},
+  {id:'k5', name:'حسین رستمی', role:'investor', date:'۱۴۰۳/۰۶/۲۰', status:'verified',
+   docs:[{n:'کارت ملی (رو)', s:'approved'},{n:'کارت ملی (پشت)', s:'approved'},{n:'عکس کاربر', s:'approved'}]},
+  {id:'k6', name:'فاطمه نوری', role:'investor', date:'۱۴۰۳/۰۶/۱۵', status:'rejected',
+   reason:'تصویر کارت ملی تار و غیرقابل خواندن است و عکس کاربر با تصویر کارت ملی تطابق ندارد. لطفاً مدارک را با کیفیت بالاتر ارسال کنید.',
+   docs:[{n:'کارت ملی (رو)', s:'rejected'},{n:'کارت ملی (پشت)', s:'rejected'},{n:'عکس کاربر', s:'rejected'}]},
+];
+
+/* درخواست‌های ثبت‌نام انبوه‌سازان */
+const BUILDER_STATUS = {
+  pending:{l:'در انتظار بررسی', c:'badge-pending'}, approved:{l:'تأیید شد', c:'badge-active'},
+  rejected:{l:'رد شد', c:'badge-rejected'}, revision:{l:'نیازمند اصلاح', c:'badge-revision'},
+};
+const BUILDERS = [
+  {id:'b1', name:'شرکت ساختمانی آرکان توسعه', type:'حقوقی', city:'تهران', phone:'۰۲۱-۸۸۷۷۶۶۵۵', national:'۱۴۰۰۹۸۷۶۵۴۳',
+   capital:'۸٫۵ میلیارد', date:'۱۴۰۳/۰۷/۱۵', status:'pending',
+   docs:[{n:'آگهی تأسیس و آخرین تغییرات', s:'pending'},{n:'کد اقتصادی', s:'pending'},{n:'مدرک نمایندگی و صاحب امضا', s:'pending'},{n:'پروانه کسب رتبه ۳', s:'pending'},{n:'گزارش عملکرد ۳ سال اخیر', s:'pending'}],
+   note:'۲ پروژه تکمیل‌شده در تهران و کرج در سوابق شرکت وجود دارد.'},
+  {id:'b2', name:'علیرضا مرادی', type:'حقیقی', city:'لاهیجان', phone:'۰۹۱۱۲۳۴۵۶۷۸', national:'۰۴۱۲۹۸۷۶۵۴۳',
+   capital:'۳٫۲ میلیارد', date:'۱۴۰۳/۰۷/۱۲', status:'pending',
+   docs:[{n:'کارت ملی', s:'approved'},{n:'پروانه ساختمانی رتبه ۲', s:'pending'},{n:'مدارک تحصیلی و دوره‌های تخصصی', s:'pending'},{n:'گزارش پروژه‌های قبلی', s:'pending'}],
+   note:'بنیان‌گذار پروژه برج مروارید لاهیجان — سابقه همکاری موفق.'},
+  {id:'b3', name:'مهندس سیمین دهقان', type:'حقیقی', city:'اصفهان', phone:'۰۹۱۳۴۴۵۵۶۶۷', national:'۰۹۸۷۶۵۴۳۲۱۰',
+   capital:'۵ میلیارد', date:'۱۴۰۳/۰۶/۲۸', status:'approved',
+   docs:[{n:'کارت ملی', s:'approved'},{n:'پروانه ساختمانی رتبه ۲', s:'approved'},{n:'مدارک تحصیلی', s:'approved'}],
+   note:'احراز هویت کامل — سازنده برج اداری آرکا اصفهان.'},
+  {id:'b4', name:'شرکت عمران نوین پارس', type:'حقوقی', city:'شیراز', phone:'۰۷۱-۳۲۲۱۱۰۰۹', national:'۱۳۹۸۴۵۶۷۸۹۰',
+   capital:'۲ میلیارد', date:'۱۴۰۳/۰۶/۱۰', status:'rejected',
+   reason:'سابقه پروژه‌های نیمه‌کاره و عدم ارائه پروانه کسب معتبر؛ درخواست پس از رفع نواقص قابل ارسال مجدد است.',
+   docs:[{n:'آگهی تأسیس', s:'rejected'},{n:'پروانه کسب', s:'rejected'}],
+   note:'—'},
+];
+
+/* تیکت‌های پشتیبانی */
+const TICKET_STATUS = {
+  open:{l:'باز', c:'badge-pending'}, answered:{l:'پاسخ داده شده', c:'badge-active'},
+  closed:{l:'بسته شده', c:'badge-done'},
+};
+const TICKETS = [
+  {id:'tk1', subject:'تأخیر در تأیید احراز هویت', user:'نگار احمدی', role:'investor', priority:'high', status:'open',
+   time:'۱۴۰۳/۰۷/۱۷ — ۱۸:۲۰', msgs:[
+     {from:'نگار احمدی', me:false, t:'۱۴۰۳/۰۷/۱۷ — ۱۸:۲۰', text:'مدارکم را سه روز پیش ارسال کردم اما هنوز در حال بررسی است.'}]},
+  {id:'tk2', subject:'مشکل در نمایش خشت‌های پروژه ونداد', user:'مهدی کریمی', role:'investor', priority:'normal', status:'answered',
+   time:'۱۴۰۳/۰۷/۱۶ — ۱۱:۰۵', msgs:[
+     {from:'مهدی کریمی', me:false, t:'۱۴۰۳/۰۷/۱۶ — ۱۱:۰۵', text:'۲۵ خشت خریدم ولی در بخش «خشت‌های من» فقط ۱۰ مورد نمایش داده می‌شود.'},
+     {from:'حمید رضایی', me:true, t:'۱۴۰۳/۰۷/۱۶ — ۱۲:۴۰', text:'تراکنش دوم شما در صف تأیید کارشناس است؛ پس از تأیید، خشت‌ها به صورت خودکار نمایش داده می‌شوند.'}]},
+  {id:'tk3', subject:'درخواست هماهنگی بازدید از پروژه', user:'حسین رستمی', role:'investor', priority:'low', status:'open',
+   time:'۱۴۰۳/۰۷/۱۵ — ۰۹:۳۰', msgs:[
+     {from:'حسین رستمی', me:false, t:'۱۴۰۳/۰۷/۱۵ — ۰۹:۳۰', text:'آیا امکان بازدید از پروژه برج مروارید لاهیجان قبل از خرید بیشتر وجود دارد؟'}]},
+  {id:'tk4', subject:'درخواست ویرایش اطلاعات شرکت', user:'شرکت ساختمانی آرکان توسعه', role:'builder', priority:'normal', status:'closed',
+   time:'۱۴۰۳/۰۶/۳۰ — ۱۴:۰۰', msgs:[
+     {from:'شرکت ساختمانی آرکان توسعه', me:false, t:'۱۴۰۳/۰۶/۳۰ — ۱۴:۰۰', text:'شماره تماس شرکت تغییر کرده است.'},
+     {from:'حمید رضایی', me:true, t:'۱۴۰۳/۰۷/۰۱ — ۰۹:۱۵', text:'اطلاعات به‌روزرسانی شد. سپس از همراهی شما.'}]},
+];
+
+/* محتوای دانشنامه */
+const ENTRY_STATUS = {
+  published:{l:'منتشر شده', c:'badge-active'}, draft:{l:'پیش‌نویس', c:'badge-draft'}, review:{l:'در حال بازبینی', c:'badge-pending'},
+};
+const ENTRIES = [
+  {id:'e1', title:'خشت چیست و چگونه معامله می‌شود؟', cat:'مفاهیم پایه', status:'published', views:1240, date:'۱۴۰۳/۰۵/۱۰'},
+  {id:'e2', title:'نحوه احراز هویت در عمارت', cat:'امنیت', status:'published', views:865, date:'۱۴۰۳/۰۵/۱۸'},
+  {id:'e3', title:'مراحل آزادسازی وجه در پروژه‌ها', cat:'سرمایه‌گذاری', status:'published', views:490, date:'۱۴۰۳/۰۶/۰۲'},
+  {id:'e4', title:'چگونگی محاسبه بازدهی پروژه‌های مسکونی', cat:'سرمایه‌گذاری', status:'review', views:120, date:'۱۴۰۳/۰۷/۰۹'},
+  {id:'e5', title:'تفاوت پروژه‌های تجاری و مسکونی در عمارت', cat:'مفاهیم پایه', status:'draft', views:0, date:'۱۴۰۳/۰۷/۱۴'},
+];
+
+const NOTIFS = [
+  {id:'an1', icon:'building', tone:'active', title:'پروژه جدید برای بررسی', desc:'«مجتمع تجاری اداری ونداد» نیازمند تعیین تعداد و قیمت خشت است.', time:'۲ ساعت پیش', unread:true},
+  {id:'an2', icon:'warn', tone:'rejected', title:'تلاش ورود ناموفق مکرر', desc:'۵ تلاش ناموفق ورود برای انبوه‌ساز «شرکت عمران نوین پارس» — حساب موقتاً قفل شد.', time:'۴ ساعت پیش', unread:true},
+  {id:'an3', icon:'chat', tone:'info', title:'تیکت جدید پشتیبانی', desc:'نگار احمدی: تأخیر در تأیید احراز هویت.', time:'دیروز', unread:true},
+  {id:'an4', icon:'check', tone:'active', title:'گزارش ماهانه تأیید شد', desc:'گزارش پیشرفت اسکلت پروژه برج مروارید لاهیجان.', time:'۲ روز پیش', unread:false},
+];
+
+const ACCOUNT = {
+  name:'سپهر امینی', emp:'SUP-۰۰۰۱', role:'سوپر ادمین پلتفرم', dept:'مدیریت ارشد پلتفرم',
+  phone:'۰۹۱۲۱۱۱۲۲۳۳', email:'s.amini@emarrat.ir', joined:'۱۴۰۲/۰۳/۰۱',
+  myLogs:[
+    {t:'ایجاد حساب کارشناس جدید «نگار سلطانی» با کد کارمندی EXP-۰۱۲۳', time:'۱۴۰۳/۰۷/۱۵ — ۱۱:۴۰'},
+    {t:'مسدودسازی موقت حساب کاربر به دلیل تلاش ناموفق مکرر ورود', time:'۱۴۰۳/۰۷/۱۲ — ۱۶:۲۵'},
+    {t:'تغییر سطح دسترسی کاربر از «کارشناس» به «ادمین»', time:'۱۴۰۳/۰۶/۳۰ — ۰۹:۱۰'},
+    {t:'ورود به پنل با تأیید دومرحله‌ای', time:'۱۴۰۳/۰۷/۱۸ — ۰۸:۰۰'},
+  ],
+};
+
+/* --- user management --- */
+const USER_STATUS = {
+  active:{l:'فعال', c:'badge-active'},
+  blockedTemp:{l:'مسدود موقت', c:'badge-rejected'},
+  blockedPerm:{l:'مسدود دائم', c:'badge-draft'},
+  deleted:{l:'حذف شده', c:'badge-draft'},
+};
+const USERS = [
+  {id:'u1', name:'نیلوفر کریمی', role:'investor', status:'active', phone:'۰۹۱۲۳۴۵۶۷۸۹', national:'۱۲۳۴۵۶۷۸۹۰', joined:'۱۴۰۲/۱۱/۰۲', tokens:32, kyc:'verified', city:'تهران'},
+  {id:'u2', name:'محمدرضا اکبری', role:'investor', status:'active', phone:'۰۹۱۲۱۲۳۴۵۶۷', national:'۰۰۹۸۷۶۵۴۳۲', joined:'۱۴۰۲/۱۲/۱۵', tokens:8, kyc:'pending', city:'اصفهان'},
+  {id:'u3', name:'مهندس علیرضا مرادی', role:'builder', status:'active', phone:'۰۹۱۳۴۴۵۵۶۶۷', national:'۱۱۲۲۳۳۴۴۵۵', joined:'۱۴۰۳/۰۲/۰۸', tokens:0, kyc:'verified', city:'شیراز'},
+  {id:'u4', name:'سارا موسوی', role:'investor', status:'blockedTemp', phone:'۰۹۱۴۵۵۶۶۷۷۸', national:'۴۴۵۵۶۶۷۷۸۸', joined:'۱۴۰۳/۰۳/۲۰', tokens:4, kyc:'verified', city:'مشهد', blockReason:'تلاش ناموفق مکرر در ورود — قفل ۲۴ ساعته', blockUntil:'۱۴۰۳/۰۷/۱۹'},
+  {id:'u5', name:'امیرحسین رستمی', role:'investor', status:'active', phone:'۰۹۱۵۶۶۷۷۸۸۹', national:'۵۵۶۶۷۷۸۸۹۹', joined:'۱۴۰۳/۰۴/۰۵', tokens:16, kyc:'verified', city:'تهران'},
+  {id:'u6', name:'شرکت عمران نوین پارس', role:'builder', status:'blockedPerm', phone:'۰۹۱۶۷۷۸۸۹۹۰', national:'۰۲۱۴۳۶۵۸۷۹', joined:'۱۴۰۳/۰۱/۱۲', tokens:0, kyc:'rejected', city:'تهران', blockReason:'ارائه مدارک مجعول در احراز هویت حقوقی'},
+  {id:'u7', name:'فاطمه حسینی', role:'investor', status:'active', phone:'۰۹۱۷۸۸۹۹۰۰۱', national:'۶۶۷۷۸۸۹۹۰۰', joined:'۱۴۰۳/۰۵/۱۸', tokens:24, kyc:'verified', city:'کرج'},
+  {id:'u8', name:'حسین قاسمی', role:'investor', status:'active', phone:'۰۹۱۸۹۹۰۰۱۱۲', national:'۷۷۸۸۹۹۰۰۱۱', joined:'۱۴۰۳/۰۶/۰۲', tokens:2, kyc:'pending', city:'تبریز'},
+];
+const USER_ROLE_TABS = [{k:'all', l:'همه کاربران'},{k:'investor', l:'سرمایه‌گذاران'},{k:'builder', l:'انبوه‌سازان'}];
+
+/* --- staff (admins & experts) created by super-admin --- */
+const STAFF = [
+  {id:'s1', name:'حمید رضایی', role:'admin', emp:'ADM-۰۷۱۲', phone:'۰۹۱۲۲۳۳۴۴۵۵', email:'h.rezaei@emarrat.ir', status:'active', joined:'۱۴۰۲/۰۹/۰۱', twoFA:true, dept:'واحد عملیات پلتفرم', lastLogin:'۱۴۰۳/۰۷/۱۸ — ۰۸:۳۰'},
+  {id:'s2', name:'نگار سلطانی', role:'expert', emp:'EXP-۰۱۲۳', phone:'۰۹۱۹۹۸۸۷۷۶۶', email:'n.soltani@emarrat.ir', status:'active', joined:'۱۴۰۳/۰۷/۱۵', twoFA:true, dept:'کارشناس پروژه‌های مسکونی', lastLogin:'۱۴۰۳/۰۷/۱۷ — ۱۴:۱۰'},
+  {id:'s3', name:'بهنام کاظمی', role:'admin', emp:'ADM-۰۷۳۴', phone:'۰۹۱۲۳۴۳۴۳۴۳', email:'b.kazemi@emarrat.ir', status:'active', joined:'۱۴۰۳/۰۲/۲۰', twoFA:true, dept:'واحد مالی و گزارش‌گیری', lastLogin:'۱۴۰۳/۰۷/۱۶ — ۱۱:۰۵'},
+  {id:'s4', name:'مهسا رحیمی', role:'expert', emp:'EXP-۰۱۰۸', phone:'۰۹۱۹۷۷۶۶۵۵۴', email:'m.rahimi@emarrat.ir', status:'suspended', joined:'۱۴۰۳/۰۴/۱۱', twoFA:false, dept:'کارشناس پروژه‌های تجاری', lastLogin:'۱۴۰۳/۰۶/۲۹ — ۰۹:۴۰', suspendReason:'عدم فعال‌سازی تأیید دومرحله‌ای در مهلت مقرر'},
+  {id:'s5', name:'آرش جعفری', role:'expert', emp:'EXP-۰۱۳۱', phone:'۰۹۱۹۵۵۴۴۳۳۲', email:'a.jafari@emarrat.ir', status:'active', joined:'۱۴۰۳/۰۶/۲۵', twoFA:true, dept:'کارشناس احراز هویت', lastLogin:'۱۴۰۳/۰۷/۱۸ — ۰۹:۵۰'},
+];
+const STAFF_TABS = [{k:'admin', l:'ادمین‌ها'},{k:'expert', l:'کارشناس‌ها'},{k:'all', l:'همه کارکنان'}];
+const STAFF_STATUS = {active:{l:'فعال', c:'badge-active'}, suspended:{l:'معلق', c:'badge-rejected'}, off:{l:'غیرفعال', c:'badge-draft'}};
+
+/* --- sensitive activity log --- */
+const SEC_LOG = [
+  {id:'l1', sev:'high', who:'حمید رضایی (ADM-۰۷۱۲)', act:'تغییر قیمت هر خشت پروژه «برج مروارید لاهیجان» از ۴٫۵ به ۵ میلیون تومان', time:'۱۴۰۳/۰۷/۱۶ — ۱۰:۲۰', ip:'۱۹۲٫۱۶۸٫۱٫۳۴'},
+  {id:'l2', sev:'high', who:'سپهر امینی (SUP-۰۰۰۱)', act:'مسدودسازی دائم حساب شرکت عمران نوین پارس — ارائه مدارک مجعول', time:'۱۴۰۳/۰۷/۱۲ — ۱۶:۲۵', ip:'۱۹۲٫۱۶۸٫۱٫۱۰'},
+  {id:'l3', sev:'med', who:'نگار سلطانی (EXP-۰۱۲۳)', act:'تأیید مدارک احراز هویت سرمایه‌گذار «فاطمه حسینی»', time:'۱۴۰۳/۰۷/۱۱ — ۱۳:۴۰', ip:'۱۹۲٫۱۶۸٫۱٫۵۱'},
+  {id:'l4', sev:'high', who:'سپهر امینی (SUP-۰۰۰۱)', act:'ایجاد حساب کارشناس جدید برای «آرش جعفری» با کد کارمندی EXP-۰۱۳۱', time:'۱۴۰۳/۰۶/۲۵ — ۱۰:۰۵', ip:'۱۹۲٫۱۶۸٫۱٫۱۰'},
+  {id:'l5', sev:'med', who:'بهنام کاظمی (ADM-۰۷۳۴)', act:'خروج گزارش مالی ماهانه پروژه‌ها به فرمت PDF', time:'۱۴۰۳/۰۷/۰۹ — ۱۵:۲۰', ip:'۱۹۲٫۱۶۸٫۱٫۴۴'},
+  {id:'l6', sev:'low', who:'مهسا رحیمی (EXP-۰۱۰۸)', act:'ورود ناموفق به پنل — رمز عبور اشتباه (۳ بار)', time:'۱۴۰۳/۰۶/۲۹ — ۰۹:۳۵', ip:'۱۹۲٫۱۶۸٫۱٫۵۲'},
+  {id:'l7', sev:'high', who:'سپهر امینی (SUP-۰۰۰۱)', act:'تغییر سطح دسترسی کاربر از «کارشناس» به «ادمین» — بهنام کاظمی', time:'۱۴۰۳/۰۲/۲۰ — ۰۹:۱۵', ip:'۱۹۲٫۱۶۸٫۱٫۱۰'},
+];
+
+/* --- access-level matrix (page 26 + doc 05 access table) --- */
+const ACCESS_MATRIX = [
+  {perm:'تأیید خرید خشت سرمایه‌گذاران', roles:{investor:'-', builder:'-', expert:'بله', admin:'بله', super:'بله'}},
+  {perm:'مشاهده مستندات پیشرفت پروژه', roles:{investor:'بله', builder:'بله', expert:'بله', admin:'بله', super:'بله'}},
+  {perm:'تأیید یا رد پروژه انبوه‌ساز', roles:{investor:'-', builder:'-', expert:'-', admin:'بله', super:'بله'}},
+  {perm:'تعیین تعداد و قیمت خشت + به‌روزرسانی ماهانه', roles:{investor:'-', builder:'-', expert:'-', admin:'بله', super:'بله'}},
+  {perm:'مشاهده گزارش مالی پروژه‌ها', roles:{investor:'-', builder:'-', expert:'-', admin:'بله', super:'بله'}},
+  {perm:'پاسخ به تیکت‌های پشتیبانی', roles:{investor:'-', builder:'-', expert:'بله', admin:'بله', super:'بله'}},
+  {perm:'مدیریت کاربران، مسدودسازی و حذف حساب', roles:{investor:'-', builder:'-', expert:'-', admin:'-', super:'بله'}},
+  {perm:'ایجاد و مدیریت ادمین‌ها و کارشناس‌ها', roles:{investor:'-', builder:'-', expert:'-', admin:'-', super:'بله'}},
+  {perm:'تنظیمات امنیتی و مشاهده لاگ فعالیت‌های حساس', roles:{investor:'-', builder:'-', expert:'-', admin:'-', super:'بله'}},
+  {perm:'تأیید عرضه‌ها و تسویه بازار ثانویه', roles:{investor:'-', builder:'-', expert:'بله', admin:'بله', super:'بله'}},
+  {perm:'انجام دستی عملیات مالی و ثبت رسید', roles:{investor:'-', builder:'-', expert:'بله', admin:'بله', super:'بله'}},
+  {perm:'مدیریت مقالات سایت', roles:{investor:'-', builder:'-', expert:'-', admin:'بله', super:'بله'}},
+];
+const ROLE_COLS = [
+  {k:'investor', l:'سرمایه‌گذار', c:'r-investor'},
+  {k:'builder', l:'انبوه‌ساز', c:'r-builder'},
+  {k:'expert', l:'کارشناس', c:'r-expert'},
+  {k:'admin', l:'ادمین', c:'r-admin'},
+  {k:'super', l:'سوپر ادمین', c:'r-super'},
+];
+
+
+/* ===================== STATE ===================== */
+const state = {
+  view:'dashboard', builderTab:'pending', ticketTab:'open', contentTab:'all', buyerProject:'p1',
+  reqTab:'pending', reqSearch:'', mktTab:'pending', relTab:'pending', relSub:'requests', kycTab:'pending',
+  projStatus:'all', projSearch:'', selectedProject:null, projectTab:'overview',
+  notifTab:'all', notifRead:new Set(), acctTab:'profile',
+  userTab:'all', userSearch:'', staffTab:'admin',
+  modal:{type:null, id:null, extra:null}, confirm:null,
+  tgl:{twofa:true, loginAlert:true, force2fa:true, rateLimit:true, ipBind:false, logExport:true, delConfirm:true},
+};
+
+
+/* ===================== HELPERS ===================== */
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(n){ return Number(n).toLocaleString('en-US'); }
+function toFa(n){ return String(n).replace(/\d/g, d=>'۰۱۲۳۴۵۶۷۸۹'[d]); }
+function money(n){ return toFa(fmt(n)) + ' تومان'; }
+function findProject(id){ return PROJECTS.find(p=>p.id===id); }
+function badge(map,status){ const m=map[status]||map.draft||{l:'—',c:'badge-draft'}; return `<span class="badge ${m.c}">${m.l}</span>`; }
+function roleChip(role){ const m=ROLE_META[role]||{l:'—',c:''}; return `<span class="role-chip ${m.c}">${m.l}</span>`; }
+function unreadCount(){ return NOTIFS.filter(n=>n.unread && !state.notifRead.has(n.id)).length; }
+function pendingRel(){ return RELEASES.filter(r=>r.status==='pending').length; }
+function pendingKyc(){ return KYCS.filter(k=>k.status==='pending').length; }
+function pendingReports(){ return REPORTS.filter(r=>r.status==='pending').length; }
+function emptyState(title, desc, btnLabel, btnAction){
+  return `<div class="empty">${I.doc}<div class="t">${esc(title)}</div>
+    ${desc?`<div style="font-size:12px;max-width:340px;margin:0 auto;line-height:1.9;">${esc(desc)}</div>`:''}
+    ${btnLabel?`<button class="btn btn-soft btn-sm" style="margin-top:14px;" data-action="${btnAction}">${btnLabel}</button>`:''}</div>`;
+}
+
+function showToast(msg, type='success'){
+  const el = document.createElement('div');
+  el.className = 'toast toast-'+type;
+  const icon = type==='error' ? I.warn : type==='info' ? I.info : I.check;
+  el.innerHTML = icon + '<span>'+esc(msg)+'</span>';
+  document.body.appendChild(el);
+  requestAnimationFrame(()=> el.classList.add('show'));
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=> el.remove(), 280); }, 2800);
+}
+function showConfirm({title, msg, confirmLabel='حذف', onConfirm}){
+  state.confirm = {title, msg, confirmLabel, onConfirm}; render();
+}
+function closeConfirm(){ state.confirm=null; render(); }
+
+/* ===================== SHELL ===================== */
+const NAV = [
+  {k:'dashboard', l:'داشبورد', icon:I.grid},
+  {k:'users', l:'مدیریت کاربران', icon:I.users},
+  {k:'staff', l:'کارکنان پلتفرم', icon:I.user, badge:()=>suspendedStaff()},
+  {k:'builders', l:'درخواست انبوه‌سازان', icon:I.building, badge:()=>pendingBuilders()},
+  {k:'projects', l:'پروژه‌ها', icon:I.coin, badge:()=>pendingProjects()},
+  {k:'requests', l:'درخواست‌های مالی', icon:I.coin, badge:()=>pendingReq()},
+  {k:'releases', l:'آزادسازی وجه', icon:I.wallet, badge:()=>pendingRel()},
+  {k:'market', l:'بازار ثانویه', icon:I.activity, badge:()=>pendingMkt()},
+  {k:'finance', l:'گزارش مالی', icon:I.chart},
+  {k:'buyers', l:'خریداران', icon:I.users},
+  {k:'tickets', l:'تیکت پشتیبانی', icon:I.chat, badge:()=>openTickets()},
+  {k:'content', l:'مقالات سایت', icon:I.doc},
+  {k:'security', l:'تنظیمات امنیتی', icon:I.shield},
+  {k:'notifications', l:'اعلان‌ها', icon:I.bell, badge:()=>unreadCount()},
+  {k:'account', l:'حساب کاربری', icon:I.user},
+];
+const PAGE_META = {
+  dashboard:{t:'داشبورد سوپر ادمین', s:'نگاه کلی بر کل پلتفرم، کاربران و کارکنان'},
+  users:{t:'مدیریت کاربران', s:'مسدودسازی، تغییر سطح دسترسی و حذف حساب کاربران'},
+  staff:{t:'کارکنان پلتفرم', s:'ایجاد و مدیریت ادمین‌ها و کارشناس‌ها'},
+  builders:{t:'درخواست‌های انبوه‌سازان', s:'بررسی و تأیید درخواست‌های ثبت‌نام'},
+  projects:{t:'پروژه‌ها', s:'مدیریت پروژه‌ها و تعیین تعداد و قیمت خشت'},
+  requests:{t:'درخواست‌های مالی', s:'گردش کار یکپارچه: ثبت درخواست، بررسی و تأیید، سپس انجام دستی عملیات مالی'},
+  market:{t:'بازار ثانویه', s:'تأیید عرضه‌ها، ثبت معامله و تسویه دستی خشت‌های سرمایه‌گذاران'},
+  releases:{t:'آزادسازی وجه پروژه‌ها', s:'بررسی درخواست‌های آزادسازی وجه و گزارش‌های ماهانه'},
+  finance:{t:'گزارش مالی', s:'وضعیت مالی همه پروژه‌های پلتفرم'},
+  buyers:{t:'فهرست خریداران', s:'مشاهده خریداران و اطلاعات تماس هر پروژه'},
+  tickets:{t:'تیکت‌های پشتیبانی', s:'پاسخ به درخواست‌های کاربران'},
+  content:{t:'مقالات سایت', s:'ایجاد، ویرایش و مدیریت مقالات منتشرشده در سایت'},
+  security:{t:'تنظیمات امنیتی', s:'تأیید دومرحله‌ای، محدودسازی و سطوح دسترسی'},
+  notifications:{t:'اعلان‌ها', s:'اعلان‌های سیستم و پلتفرم'},
+  account:{t:'حساب کاربری', s:'اطلاعات کارمندی، امنیت و تاریخچه فعالیت'},
+};
+function suspendedStaff(){ return STAFF.filter(s=>s.status==='suspended').length; }
+function activeUsers(){ return USERS.filter(u=>u.status==='active').length; }
+function blockedUsers(){ return USERS.filter(u=>u.status==='blockedTemp'||u.status==='blockedPerm').length; }
+function staffOf(role){ return STAFF.filter(s=>s.status!=='off' && (role==='all'||s.role===role)).length; }
+
+function pendingBuilders(){ return BUILDERS.filter(b=>b.status==='pending').length; }
+function pendingProjects(){ return PROJECTS.filter(p=>p.status==='pending').length; }
+function openTickets(){ return TICKETS.filter(t=>t.status==='open').length; }
+function totalRaised(){ return PROJECTS.reduce((s,p)=>s+p.raised,0); }
+function totalSold(){ return PROJECTS.reduce((s,p)=>s+p.sold,0); }
+
+function render(){
+  const app = document.getElementById('app');
+  const meta = state.selectedProject
+    ? {t:findProject(state.selectedProject).name, s:'تنظیمات خشت، مراحل و مستندات پروژه'}
+    : PAGE_META[state.view];
+  app.innerHTML = `
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">ع</div>
+        <div><div class="brand-name">عمارت</div><div class="brand-sub">پنل ادمین</div></div>
+      </div>
+      <nav class="nav">
+        ${NAV.map(n=>{
+          const cnt = typeof n.badge==='function' ? n.badge() : n.badge;
+          return `<div class="nav-item ${state.view===n.k && !state.selectedProject ? 'active':''}" data-action="nav" data-view="${n.k}">
+            ${n.icon}<span>${n.l}</span>
+            ${cnt ? `<span class="nav-badge ${n.k==='notifications'?'':'muted'}">${toFa(cnt)}</span>` : ''}
+          </div>`;
+        }).join('')}
+      </nav>
+      <div class="sidebar-foot">
+        <div class="avatar">ح.ر</div>
+        <div><div class="name">${ACCOUNT.name}</div><div class="role">${ACCOUNT.role}</div></div>
+      </div>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div>
+          ${state.selectedProject
+            ? `<div style="display:flex;align-items:center;gap:8px;"><span data-action="back-projects" style="cursor:pointer;color:var(--text-faint);font-size:12.5px;">پروژه‌ها</span>${I.chevLeft}<span class="page-title">${esc(meta.t)}</span></div>`
+            : `<div class="page-title">${meta.t}</div>`}
+          <div class="page-sub">${meta.s}</div>
+        </div>
+        <div class="topbar-right">
+          <button class="icon-btn" data-action="nav" data-view="notifications">
+            ${I.bell}${unreadCount() ? `<span class="dot-flag">${toFa(unreadCount())}</span>` : ''}
+          </button>
+          <div class="avatar">ح.ر</div>
+        </div>
+      </div>
+      <div class="content" id="content"></div>
+    </div>
+    ${state.modal.type ? renderModal() : ''}
+    ${state.confirm ? renderConfirm() : ''}
+  `;
+  renderContent();
+  bindEvents();
+  if(state.view==='finance' && !state.selectedProject) initFinanceChart();
+}
+
+function renderContent(){
+  const c = document.getElementById('content');
+  if(state.selectedProject){ c.innerHTML = renderProjectDetail(); return; }
+  switch(state.view){
+    case 'dashboard': c.innerHTML = renderDashboard(); break;
+    case 'builders': c.innerHTML = renderBuilders(); break;
+    case 'projects': c.innerHTML = renderProjects(); break;
+    case 'requests': c.innerHTML = renderRequests(); break;
+    case 'market': c.innerHTML = renderMarket(); break;
+    case 'releases': c.innerHTML = renderReleases(); break;
+    case 'finance': c.innerHTML = renderFinance(); break;
+    case 'buyers': c.innerHTML = renderBuyers(); break;
+    case 'tickets': c.innerHTML = renderTickets(); break;
+    case 'content': c.innerHTML = renderContentEntries(); break;
+    case 'users': c.innerHTML = renderUsers(); break;
+    case 'staff': c.innerHTML = renderStaff(); break;
+    case 'security': c.innerHTML = renderSecurity(); break;
+    case 'notifications': c.innerHTML = renderNotifications(); break;
+    case 'account': c.innerHTML = renderAccount(); break;
+    default: c.innerHTML = renderDashboard();
+  }
+}
+
+/* ===================== DASHBOARD ===================== */
+function statCard(icon, label, val, sub, tone, action){
+  const [bg,fg] = tone;
+  return `<div class="card stat-card ${action?'clickable':''}" ${action?`data-action="${action}"`:''}>
+    <div style="width:36px;height:36px;border-radius:10px;background:${bg};color:${fg};display:flex;align-items:center;justify-content:center;">${icon}</div>
+    <div class="st-val">${val}</div>
+    <div style="font-size:12.5px;font-weight:600;">${label}</div>
+    ${sub?`<div style="font-size:11px;color:var(--text-faint);">${sub}</div>`:''}
+  </div>`;
+}
+const TONE = {
+  green:['var(--primary-light)','var(--primary-dark)'], gold:['var(--gold-light)','var(--gold)'],
+  red:['var(--danger-light)','var(--danger)'], blue:['var(--info-light)','var(--info)'],
+};
+function renderDashboard(){
+  return `
+    <div class="stat-grid">
+      ${statCard(I.wallet,'سرمایه جذب‌شده کل', toFa(fmt(totalRaised()))+'<small style="font-size:12px;font-weight:500;color:var(--text-faint);"> میلیون</small>', toFa(PROJECTS.length)+' پروژه فعال', TONE.green, 'nav-finance')}
+      ${statCard(I.users,'کاربران فعال', toFa(activeUsers()), toFa(blockedUsers())+' حساب مسدودشده', TONE.blue, 'nav-users')}
+      ${statCard(I.key,'کارکنان پلتفرم', toFa(staffOf('all')), toFa(staffOf('admin'))+' ادمین · '+toFa(staffOf('expert'))+' کارشناس', TONE.gold, 'nav-staff')}
+      ${statCard(I.warn,'انبوه‌سازان در انتظار', toFa(pendingBuilders()), 'نیازمند بررسی مدارک', TONE.red, 'nav-builders')}
+      ${statCard(I.coin,'درخواست مالی در انتظار', toFa(pendingReq()), money(REQUESTS.filter(r=>r.status==='pending').reduce((s,r)=>s+r.amount,0)), TONE.gold, 'nav-requests')}
+      ${statCard(I.activity,'بازار ثانویه', toFa(MARKET.filter(m=>m.status==='settle').length), 'در انتظار تسویه دستی', TONE.blue, 'nav-market')}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;" class="dash-2col">
+      <div class="card" style="padding:16px 18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:14px;font-weight:800;">کارکنان پلتفرم</div>
+          <button class="btn btn-ghost btn-sm" data-action="nav" data-view="staff">همه</button>
+        </div>
+        ${STAFF.slice(0,4).map(s=>`
+          <div class="queue-row">
+            <div style="flex:1;min-width:0;"><div class="q-title">${esc(s.name)} <span class="code-pill">${esc(s.emp)}</span></div>
+              <div class="q-sub">${s.role==='admin'?'ادمین':'کارشناس'} · ${esc(s.dept)}</div></div>
+            ${badge(STAFF_STATUS, s.status)}
+          </div>`).join('')}
+      </div>
+      <div class="card" style="padding:16px 18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:14px;font-weight:800;">درخواست‌های انبوه‌سازان</div>
+          <button class="btn btn-ghost btn-sm" data-action="nav" data-view="builders">همه</button>
+        </div>
+        ${BUILDERS.filter(b=>b.status==='pending').slice(0,3).map(b=>`
+          <div class="queue-row">
+            <div style="flex:1;min-width:0;"><div class="q-title">${esc(b.name)}</div>
+              <div class="q-sub">${esc(b.type)} — ${esc(b.city)} — سرمایه ${esc(b.capital)}</div></div>
+            <button class="btn btn-soft btn-sm" data-action="open-builder" data-id="${b.id}">بررسی</button>
+          </div>`).join('') || emptyState('درخواستی در انتظار نیست','','','')}
+      </div>
+    </div>
+    <div class="card" style="padding:16px 18px;margin-top:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:800;">آخرین فعالیت‌های حساس</div>
+        <button class="btn btn-ghost btn-sm" data-action="nav" data-view="security">لاگ کامل</button>
+      </div>
+      ${SEC_LOG.slice(0,5).map(l=>`
+        <div class="queue-row">
+          <span class="log-sev s-${l.sev}">${l.sev==='high'?'حساس':l.sev==='med'?'متوسط':'عادی'}</span>
+          <div style="flex:1;min-width:0;"><div class="q-title" style="font-size:12.5px;">${esc(l.act)}</div>
+            <div class="log-act">${esc(l.who)} · ${esc(l.time)} · IP ${esc(l.ip)}</div></div>
+        </div>`).join('')}
+    </div>`;
+}
+
+/* ===================== BUILDERS ===================== */
+const BUILDER_TABS = [
+  {k:'pending', l:'در انتظار بررسی'}, {k:'approved', l:'تأیید شده'},
+  {k:'rejected', l:'رد شده'}, {k:'all', l:'همه'},
+];
+function renderBuilders(){
+  const list = BUILDER_TABS.some(t=>t.k===state.builderTab) && state.builderTab!=='all'
+    ? BUILDERS.filter(b=>b.status===state.builderTab) : BUILDERS;
+  return `
+    <div class="filter-bar">
+      <div class="chip-row">
+        ${BUILDER_TABS.map(t=>`<button class="chip ${state.builderTab===t.k?'active':''}" data-action="builder-tab" data-tab="${t.k}">${t.l}</button>`).join('')}
+      </div>
+    </div>
+    ${list.length ? `<div class="card" style="overflow:hidden;">
+      <table class="dt">
+        <thead><tr><th>نام انبوه‌ساز</th><th>نوع</th><th>شهر</th><th>سرمایه</th><th>تاریخ</th><th>مدارک</th><th>وضعیت</th><th></th></tr></thead>
+        <tbody>
+          ${list.map(b=>`<tr>
+            <td><div class="cell-title">${esc(b.name)}</div></td>
+            <td>${esc(b.type)}</td>
+            <td>${esc(b.city)}</td>
+            <td class="num">${esc(b.capital)}</td>
+            <td>${esc(b.date)}</td>
+            <td>${toFa(b.docs.filter(d=>d.s==='approved').length)}/${toFa(b.docs.length)} تأیید</td>
+            <td>${badge(BUILDER_STATUS,b.status)}</td>
+            <td><button class="btn btn-soft btn-sm" data-action="open-builder" data-id="${b.id}">${b.status==='pending'?'بررسی':'مشاهده'}</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`
+    : emptyState('درخواستی در این دسته نیست','','','')}
+    <div style="margin-top:14px;font-size:11.5px;color:var(--text-faint);display:flex;align-items:center;gap:6px;">${I.info}<span>تأیید یا رد درخواست انبوه‌سازان با ثبت دلیل انجام می‌شود؛ این اقدام برای کاربر قابل مشاهده است.</span></div>`;
+}
+
+/* ===================== PROJECTS ===================== */
+const PROJ_TABS = [
+  {k:'all', l:'همه'}, {k:'pending', l:'در انتظار تعیین خشت'}, {k:'active', l:'فعال'},
+  {k:'revision', l:'نیازمند اصلاح'}, {k:'done', l:'پایان‌یافته'},
+];
+function projFiltered(){
+  const q = state.projSearch.trim();
+  return PROJECTS.filter(p=> state.projStatus==='all' || p.status===state.projStatus)
+    .filter(p=> !q || p.name.includes(q) || p.city.includes(q) || (p.builder||'').includes(q));
+}
+function renderProjects(){
+  const list = projFiltered();
+  return `
+    <div class="filter-bar">
+      <div class="chip-row">
+        ${PROJ_TABS.map(t=>`<button class="chip ${state.projStatus===t.k?'active':''}" data-action="proj-tab" data-tab="${t.k}">${t.l}</button>`).join('')}
+      </div>
+      <div class="search-box">${I.search}<input data-field="proj-search" placeholder="جستجوی نام پروژه، شهر یا انبوه‌ساز…" value="${esc(state.projSearch)}"/></div>
+    </div>
+    ${list.length ? `<div class="projects-grid">
+      ${list.map(p=>`
+        <div class="card p-card" data-action="open-project" data-id="${p.id}">
+          <div class="p-head">
+            <div class="p-thumb" style="background:${p.cover};">
+              <span class="thumb-icon">${I.building}</span>
+              <span class="type-chip">${PROJ_TYPE[p.type]}</span>
+            </div>
+            <div class="p-head-info">
+              <span class="p-status-pill is-${p.status}">${PROJ_STATUS[p.status].l}</span>
+              <div class="p-title">${esc(p.name)}</div>
+              <div class="p-city">${I.pin}<span>${esc(p.city)}</span></div>
+            </div>
+          </div>
+          <div class="p-budget-grid">
+            <div class="p-budget-col"><span class="p-budget-label">خشت فروخته‌شده</span><span class="p-budget-val">${toFa(fmt(p.sold))}<small>/ ${toFa(fmt(p.totalTokens))}</small></span></div>
+            <div class="p-budget-col"><span class="p-budget-label">سرمایه جذب‌شده</span><span class="p-budget-val">${toFa(fmt(p.raised))}<small>میلیون</small></span></div>
+            <div class="p-budget-col"><span class="p-budget-label">قیمت هر خشت</span><span class="p-budget-val highlight">${p.tokenPrice? toFa(fmt(p.tokenPrice/1000000))+'<small>میلیون</small>' : '<small>تعیین نشده</small>'}</span></div>
+          </div>
+          <div class="p-duration">
+            <div class="p-duration-row"><span>پیشرفت زمانی پروژه</span><b class="p-pct">${toFa(p.progress)}٪</b></div>
+            <div class="progress-track"><div class="progress-fill" style="width:${p.progress}%"></div></div>
+          </div>
+          <div class="p-foot">
+            <button class="btn ${p.status==='pending'?'btn-primary':'btn-ghost'} p-btn-view" style="flex:1;justify-content:center;">${p.status==='pending'? I.coin+' تعیین تعداد و قیمت' : I.eye+' مشاهده پروژه'}</button>
+          </div>
+        </div>`).join('')}
+    </div>`
+    : emptyState('پروژه‌ای در این دسته نیست','','','')}`;
+}
+function tokenPanel(p){
+  const pending = p.status==='pending';
+  return `<div class="token-panel">
+    <div class="tp-title">${I.coin} تعیین دستی تعداد و قیمت خشت</div>
+    <div class="form-grid">
+      <div class="field"><label>تعداد کل خشت‌ها</label>
+        <input data-field="token-count" type="text" inputmode="numeric" value="${toFa(fmt(p.totalTokens))}" ${pending?'':'disabled'}/></div>
+      <div class="field"><label>قیمت هر خشت (تومان)</label>
+        <input data-field="token-price" type="text" inputmode="numeric" value="${p.tokenPrice? toFa(fmt(p.tokenPrice)) : ''}" ${pending?'':'disabled'}/></div>
+      <div class="field"><label>به‌روزرسانی ماهانه بعدی</label>
+        <input data-field="token-next-update" value="${p.nextUpdate || '۱۴۰۳/۰۸/۰۱'}" ${pending?'':'disabled'}/></div>
+    </div>
+    <div class="row-btns" style="margin-top:12px;">
+      ${pending
+        ? `<button class="btn btn-primary" data-action="save-tokens" data-id="${p.id}">${I.check} ثبت و انتشار پروژه</button>
+           <button class="btn btn-soft" data-action="revise-project" data-id="${p.id}">${I.edit} درخواست اصلاح از انبوه‌ساز</button>`
+        : `<button class="btn btn-primary" data-action="update-price" data-id="${p.id}">${I.refresh} به‌روزرسانی ماهانه قیمت</button>
+           <span style="font-size:11.5px;color:var(--text-faint);align-self:center;">تغییر تعداد خشت پس از انتشار فقط از طریق پشتیبانی فنی امکان‌پذیر است.</span>`}
+    </div>
+  </div>`;
+}
+function renderProjectDetail(){
+  const p = findProject(state.selectedProject);
+  const tab = state.projectTab;
+  const tabs = [['settings','تنظیمات خشت'],['overview','اطلاعات کلی'],['stages','مراحل و پیشرفت'],['docs','مستندات پروژه']];
+  let body = '';
+  if(tab==='settings'){ body = tokenPanel(p); }
+  else if(tab==='overview'){
+    body = `
+      <p style="font-size:13px;color:var(--text-muted);line-height:2;margin:0 0 16px;">${esc(p.desc)}</p>
+      <div class="detail-grid">
+        <div class="detail-cell"><div class="dc-k">انبوه‌ساز</div><div class="dc-v" style="font-size:12.5px;">${esc(p.builder)}</div></div>
+        <div class="detail-cell"><div class="dc-k">شهر</div><div class="dc-v">${esc(p.city)}</div></div>
+        <div class="detail-cell"><div class="dc-k">مساحت زمین</div><div class="dc-v">${esc(p.tech.land)}</div></div>
+        <div class="detail-cell"><div class="dc-k">مساحت ساختمان</div><div class="dc-v">${esc(p.tech.building)}</div></div>
+        <div class="detail-cell"><div class="dc-k">تعداد طبقات</div><div class="dc-v">${esc(p.tech.floors)}</div></div>
+        <div class="detail-cell"><div class="dc-k">تعداد واحدها</div><div class="dc-v">${esc(p.tech.units)}</div></div>
+        <div class="detail-cell"><div class="dc-k">شروع پروژه</div><div class="dc-v">${esc(p.tech.start)}</div></div>
+        <div class="detail-cell"><div class="dc-k">مدت کل</div><div class="dc-v">${esc(p.tech.duration)}</div></div>
+        <div class="detail-cell"><div class="dc-k">تحویل پیش‌بینی‌شده</div><div class="dc-v">${esc(p.tech.delivery)}</div></div>
+      </div>`;
+  } else if(tab==='stages'){
+    body = `<div class="timeline">${p.stages.map(s=>`
+      <div class="t-item">
+        <div class="t-dot ${s.status==='active'?'pending':''}">${s.status==='done'?I.check:s.status==='active'?I.clock:''}</div>
+        <div class="t-title">${esc(s.t)} ${s.weight?`<span style="color:var(--text-faint);font-weight:500;font-size:11.5px;">— وزن ${toFa(s.weight)}٪</span>`:''}</div>
+        <div class="t-desc">${esc(s.report || (s.status==='todo'?'آغاز نشده است.':'—'))}</div>
+      </div>`).join('')}</div>`;
+  } else {
+    body = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
+      ${p.docs.map(d=>`
+        <div class="doc-card ${d.status==='revision'||d.status==='rejected'?'rev':''}">
+          <div class="doc-top">
+            <div class="doc-icon">${I.doc}</div>
+            <div style="flex:1;min-width:0;"><div class="doc-name">${esc(d.name)}</div><div class="doc-meta">${esc(d.cat)} — ارسال ${esc(d.date)}</div></div>
+            ${badge(DOC_STATUS,d.status)}
+          </div>
+          ${d.expertComment?`<div class="expert-box"><div class="ex-title">${I.warn} نظر کارشناس:</div><div class="ex-text">${esc(d.expertComment)}</div></div>`:''}
+        </div>`).join('')}
+    </div>`;
+  }
+  return `
+    <div class="tabs">
+      ${tabs.map(([k,l])=>`<div class="tab ${tab===k?'active':''}" data-action="project-tab" data-tab="${k}">${l}</div>`).join('')}
+    </div>
+    ${body}`;
+}
+
+/* ===================== FINANCE ===================== */
+function renderFinance(){
+  const rows = PROJECTS.slice().sort((a,b)=>b.raised-a.raised);
+  return `
+    <div class="stat-grid">
+      ${statCard(I.wallet,'سرمایه جذب‌شده کل', toFa(fmt(totalRaised()))+'<small style="font-size:12px;font-weight:500;color:var(--text-faint);"> میلیون</small>', '', TONE.green)}
+      ${statCard(I.coin,'خشت فروخته‌شده', toFa(fmt(totalSold())), '', TONE.gold)}
+      ${statCard(I.building,'پروژه‌های فعال', toFa(PROJECTS.filter(p=>p.status==='active').length), '', TONE.blue)}
+      ${statCard(I.check,'مراحل تأیید شده', toFa(RELEASES.filter(r=>r.status==='approved').length), 'آزادسازی وجه', TONE.green)}
+    </div>
+    <div class="card" style="padding:18px;margin-top:16px;">
+      <div style="font-size:14px;font-weight:800;margin-bottom:4px;">سرمایه جذب‌شده به تفکیک پروژه</div>
+      <div style="font-size:12px;color:var(--text-faint);margin-bottom:14px;">مبلغ به میلیارد تومان</div>
+      <div style="height:280px;position:relative;"><canvas id="financeChart"></canvas></div>
+    </div>
+    <div class="card" style="margin-top:16px;overflow:hidden;">
+      <table class="dt">
+        <thead><tr><th>پروژه</th><th>انبوه‌ساز</th><th>خشت فروخته</th><th>قیمت هر خشت</th><th>سرمایه جذب‌شده</th><th>وضعیت</th></tr></thead>
+        <tbody>
+          ${rows.map(p=>`<tr>
+            <td><div class="cell-title">${esc(p.name)}</div></td>
+            <td style="font-size:12px;">${esc(p.builder)}</td>
+            <td class="num">${toFa(fmt(p.sold))} / ${toFa(fmt(p.totalTokens))}</td>
+            <td class="num">${p.tokenPrice? money(p.tokenPrice) : '—'}</td>
+            <td class="num">${toFa(fmt(p.raised))} میلیون</td>
+            <td>${badge(PROJ_STATUS,p.status)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+let financeChartInstance = null;
+function initFinanceChart(){
+  const el = document.getElementById('financeChart');
+  if(!el || !window.Chart) return;
+  if(financeChartInstance){ financeChartInstance.destroy(); }
+  const labels = PROJECTS.map(p=>p.name);
+  const data = PROJECTS.map(p=>Math.round(p.raised/1000));
+  financeChartInstance = new Chart(el.getContext('2d'), {
+    type:'bar',
+    data:{ labels, datasets:[{
+      label:'سرمایه جذب‌شده (میلیارد تومان)',
+      data, backgroundColor:'#1F5C4C', borderRadius:8, maxBarThickness:54,
+    }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false }, tooltip:{ rtl:true } },
+      scales:{
+        x:{ ticks:{ font:{ family:'Vazirmatn', size:11 }, color:'#6B7280' }, grid:{ display:false } },
+        y:{ ticks:{ font:{ family:'Vazirmatn', size:11 }, color:'#6B7280' }, grid:{ color:'#EFF1F3' } },
+      },
+    },
+  });
+}
+
+/* ===================== BUYERS ===================== */
+const BUYERS = {
+  p1:[{n:'نگار احمدی', p:'۰۹۱۲۳۴۵۶۷۸۹', qty:10, amt:40000000, d:'۱۴۰۳/۰۷/۱۸'},{n:'مهدی کریمی', p:'۰۹۳۵۱۱۲۲۳۳۴', qty:25, amt:100000000, d:'۱۴۰۳/۰۷/۱۸'},
+      {n:'حسین رستمی', p:'۰۹۰۲۹۹۸۸۷۷۶', qty:4, amt:16000000, d:'۱۴۰۳/۰۷/۱۶'},{n:'علی صادقی', p:'۰۹۱۷۴۴۵۵۶۶۷', qty:8, amt:32000000, d:'۱۴۰۳/۰۷/۱۴'},
+      {n:'مریم جعفری', p:'۰۹۰۱۲۲۳۳۴۴۵', qty:12, amt:48000000, d:'۱۴۰۳/۰۶/۲۰'}],
+  p2:[{n:'زهرا عبداللهی', p:'۰۹۱۹۸۸۷۷۶۶۵', qty:6, amt:24000000, d:'۱۴۰۳/۰۷/۱۷'},{n:'رضا کاظمی', p:'۰۹۱۲۵۵۶۶۷۷۸', qty:9, amt:36000000, d:'۱۴۰۳/۰۷/۰۹'}],
+  p3:[{n:'فاطمه نوری', p:'۰۹۳۸۱۲۳۴۵۶۷', qty:15, amt:60000000, d:'۱۴۰۳/۰۷/۱۵'},{n:'سعید طاهری', p:'۰۹۰۱۵۵۴۴۳۳۲', qty:3, amt:12000000, d:'۱۴۰۳/۰۶/۲۵'},
+      {n:'الهام حسینی', p:'۰۹۱۳۹۹۸۸۷۷۶', qty:7, amt:28000000, d:'۱۴۰۳/۰۶/۱۲'}],
+  p4:[{n:'مریم جعفری', p:'۰۹۰۱۲۲۳۳۴۴۵', qty:20, amt:100000000, d:'۱۴۰۳/۰۷/۱۲'},{n:'بهنام شریفی', p:'۰۹۰۱۷۷۸۸۹۹۰', qty:5, amt:25000000, d:'۱۴۰۳/۰۵/۳۰'}],
+};
+function renderBuyers(){
+  const pid = state.buyerProject;
+  const list = BUYERS[pid] || [];
+  const total = list.reduce((s,b)=>s+b.amt,0);
+  return `
+    <div class="filter-bar">
+      <div class="chip-row">
+        ${PROJECTS.map(p=>`<button class="chip ${pid===p.id?'active':''}" data-action="buyer-project" data-tab="${p.id}">${esc(p.name)}</button>`).join('')}
+      </div>
+    </div>
+    <div class="stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr));margin-bottom:16px;">
+      ${statCard(I.users,'تعداد خریداران', toFa(list.length), '', TONE.blue)}
+      ${statCard(I.coin,'کل خشت فروخته', toFa(fmt(list.reduce((s,b)=>s+b.qty,0))), '', TONE.gold)}
+      ${statCard(I.wallet,'مبلغ کل', toFa(fmt(total/1000000))+'<small style="font-size:12px;font-weight:500;color:var(--text-faint);"> میلیون</small>', '', TONE.green)}
+    </div>
+    ${list.length ? `<div class="card" style="overflow:hidden;">
+      <table class="dt">
+        <thead><tr><th>نام خریدار</th><th>شماره تماس</th><th>تعداد خشت</th><th>مبلغ</th><th>تاریخ</th><th></th></tr></thead>
+        <tbody>
+          ${list.map((b,i)=>`<tr>
+            <td><div class="cell-title">${esc(b.n)}</div></td>
+            <td style="direction:ltr;text-align:right;">${esc(b.p)}</td>
+            <td class="num">${toFa(b.qty)}</td>
+            <td class="num">${money(b.amt)}</td>
+            <td>${esc(b.d)}</td>
+            <td><button class="btn btn-ghost btn-sm" data-action="open-buyer" data-id="${pid}:${i}">${I.eye} پروفایل</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`
+    : emptyState('هنوز خریداری برای این پروژه ثبت نشده است','','','')}`;
+}
+
+/* ===================== TICKETS ===================== */
+const TICKET_TABS = [{k:'open', l:'باز'},{k:'answered', l:'پاسخ داده شده'},{k:'closed', l:'بسته شده'},{k:'all', l:'همه'}];
+const PRIO = {high:{l:'مهم', c:'badge-rejected'}, normal:{l:'عادی', c:'badge-pending'}, low:{l:'کم', c:'badge-draft'}};
+function renderTickets(){
+  const list = state.ticketTab==='all' ? TICKETS : TICKETS.filter(t=>t.status===state.ticketTab);
+  return `
+    <div class="filter-bar">
+      <div class="chip-row">
+        ${TICKET_TABS.map(t=>`<button class="chip ${state.ticketTab===t.k?'active':''}" data-action="ticket-tab" data-tab="${t.k}">${t.l}</button>`).join('')}
+      </div>
+    </div>
+    ${list.length ? `<div class="card" style="overflow:hidden;">
+      <table class="dt">
+        <thead><tr><th>موضوع</th><th>کاربر</th><th>نوع کاربر</th><th>اولویت</th><th>آخرین پیام</th><th>وضعیت</th><th></th></tr></thead>
+        <tbody>
+          ${list.map(t=>`<tr>
+            <td><div class="cell-title">${esc(t.subject)}</div></td>
+            <td style="font-size:12px;">${esc(t.user)}</td>
+            <td>${roleChip(t.role)}</td>
+            <td><span class="badge ${PRIO[t.priority].c}">${PRIO[t.priority].l}</span></td>
+            <td style="font-size:11.5px;color:var(--text-faint);">${esc(t.time)}</td>
+            <td>${badge(TICKET_STATUS,t.status)}</td>
+            <td><button class="btn btn-soft btn-sm" data-action="open-ticket" data-id="${t.id}">${t.status==='closed'?'مشاهده':'پاسخ'}</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`
+    : emptyState('تیکتی در این دسته نیست','','','')}`;
+}
+
+/* ===================== CONTENT (encyclopedia) ===================== */
+const CONTENT_TABS = [{k:'all', l:'همه'},{k:'published', l:'منتشر شده'},{k:'review', l:'در حال بازبینی'},{k:'draft', l:'پیش‌نویس'}];
+function renderContentEntries(){
+  const list = state.contentTab==='all' ? ENTRIES : ENTRIES.filter(e=>e.status===state.contentTab);
+  return `
+    <div class="filter-bar">
+      <div class="chip-row">
+        ${CONTENT_TABS.map(t=>`<button class="chip ${state.contentTab===t.k?'active':''}" data-action="content-tab" data-tab="${t.k}">${t.l}</button>`).join('')}
+      </div>
+      <button class="btn btn-primary btn-sm" data-action="new-entry">${I.plus} مقاله جدید</button>
+    </div>
+    ${list.length ? `<div class="card" style="overflow:hidden;">
+      <table class="dt">
+        <thead><tr><th>عنوان مقاله</th><th>دسته‌بندی</th><th>بازدید</th><th>تاریخ انتشار</th><th>وضعیت</th><th></th></tr></thead>
+        <tbody>
+          ${list.map(e=>`<tr>
+            <td><div class="cell-title">${esc(e.title)}</div></td>
+            <td style="font-size:12px;">${esc(e.cat)}</td>
+            <td class="num">${toFa(e.views)}</td>
+            <td>${esc(e.date)}</td>
+            <td>${badge(ENTRY_STATUS,e.status)}</td>
+            <td><div class="row-btns">
+              <button class="btn btn-ghost btn-sm" data-action="edit-entry" data-id="${e.id}">${I.edit}</button>
+              <button class="btn btn-danger-soft btn-sm" data-action="del-entry" data-id="${e.id}">${I.trash}</button>
+            </div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`
+    : emptyState('مقاله‌ای در این دسته نیست','','','')}`;
+}
+function renderNotifications(){
+  const list = state.notifTab==='unread' ? NOTIFS.filter(n=>n.unread && !state.notifRead.has(n.id)) : NOTIFS;
+  const tones = {active:['var(--primary-light)','var(--primary-dark)'], rejected:['var(--danger-light)','var(--danger)'], info:['var(--info-light)','var(--info)']};
+  return `
+    <div class="filter-bar">
+      <div class="chip-row">
+        <button class="chip ${state.notifTab==='all'?'active':''}" data-action="notif-tab" data-tab="all">همه</button>
+        <button class="chip ${state.notifTab==='unread'?'active':''}" data-action="notif-tab" data-tab="unread">خوانده‌نشده (${toFa(unreadCount())})</button>
+      </div>
+      <button class="btn btn-ghost btn-sm" data-action="notif-read-all">${I.check} همه را خوانده کن</button>
+    </div>
+    <div class="card" style="overflow:hidden;">
+      ${list.length ? list.map(n=>{
+        const [bg,fg] = tones[n.tone]||tones.active;
+        const unread = n.unread && !state.notifRead.has(n.id);
+        return `<div class="notif-item ${unread?'unread':''}" data-action="notif-open" data-id="${n.id}">
+          <div class="notif-icon" style="background:${bg};color:${fg};">${I[n.icon]||I.bell}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="notif-title">${esc(n.title)} ${unread?'<span class="unread-dot"></span>':''}</div>
+            <div class="notif-desc">${esc(n.desc)}</div>
+          </div>
+          <div class="notif-time">${esc(n.time)}</div>
+        </div>`;}).join('')
+      : emptyState('اعلان خوانده‌نشده‌ای وجود ندارد','','','')}
+    </div>`;
+}
+
+/* ===================== ACCOUNT ===================== */
+const ACCT_TABS = [
+  {k:'profile', l:'اطلاعات کارمندی'}, {k:'security', l:'امنیت'}, {k:'logs', l:'تاریخچه فعالیت'},
+];
+function renderAccount(){
+  const t = state.acctTab;
+  let body = '';
+  if(t==='profile'){
+    body = `<div class="card" style="padding:18px;max-width:640px;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+        <div class="avatar" style="width:56px;height:56px;font-size:17px;">س.م</div>
+        <div><div style="font-size:16px;font-weight:800;">${esc(ACCOUNT.name)}</div>
+          <div style="font-size:12.5px;color:var(--text-faint);margin-top:2px;">${esc(ACCOUNT.role)} — کد کارمندی <span class="code-pill">${esc(ACCOUNT.emp)}</span></div></div>
+        <span class="role-chip r-admin" style="margin-right:auto;">کارشناس</span>
+      </div>
+      <div class="kv-row"><span class="k">واحد سازمانی</span><span class="v">${esc(ACCOUNT.dept)}</span></div>
+      <div class="kv-row"><span class="k">شماره موبایل</span><span class="v" style="direction:ltr;">${esc(ACCOUNT.phone)}</span></div>
+      <div class="kv-row"><span class="k">ایمیل</span><span class="v" style="direction:ltr;">${esc(ACCOUNT.email)}</span></div>
+      <div class="kv-row"><span class="k">تاریخ شروع همکاری</span><span class="v">${esc(ACCOUNT.joined)}</span></div>
+      <div style="margin-top:18px;display:flex;gap:8px;">
+        <button class="btn btn-primary" data-action="save-account">${I.check} ذخیره تغییرات</button>
+      </div>
+    </div>`;
+  } else if(t==='security'){
+    body = `<div class="card sec-card" style="max-width:640px;">
+      <div class="sec-head"><div class="sh-icon" style="background:var(--primary-light);color:var(--primary-dark);">${I.shield}</div>
+        <div><div class="sh-title">تأیید دومرحله‌ای (۲FA)</div><div class="sh-desc">الزامی برای تمامی کارشناسان طبق تنظیمات امنیتی پلتفرم</div></div></div>
+      <div class="tgl-row"><div class="tgl-info"><div class="tgl-title">کد تأیید دومرحله‌ای</div>
+        <div class="tgl-desc">پس از ورود رمز عبور، کد یک‌بارمصرف از طریق اپلیکیشن تأیید هویت ارسال می‌شود.</div></div>
+        <button class="tgl ${state.tgl.twofa?'on':''}" data-action="tgl" data-key="twofa" aria-label="تغییر وضعیت تأیید دومرحله‌ای"></button></div>
+      <div class="tgl-row"><div class="tgl-info"><div class="tgl-title">هشدار تلاش ناموفق ورود</div>
+        <div class="tgl-desc">در صورت تلاش ناموفق مکرر، حساب موقتاً قفل شده و سوپر ادمین مطلع می‌شود.</div></div>
+        <span class="badge badge-active">فعال — سیستمی</span></div>
+      <div style="padding:18px;">
+        <button class="btn btn-ghost" data-action="chg-pass">${I.key} تغییر رمز عبور</button>
+      </div>
+    </div>`;
+  } else {
+    body = `<div class="card" style="padding:6px 18px 14px;max-width:720px;">
+      <div class="timeline" style="margin-top:16px;">
+        ${ACCOUNT.myLogs.map(l=>`<div class="t-item"><div class="t-dot">${I.check}</div>
+          <div class="t-title">${esc(l.t)}</div><div class="t-time">${esc(l.time)}</div></div>`).join('')}
+      </div>
+    </div>`;
+  }
+  return `
+    <div class="acct-layout">
+      <div class="acct-tabs">
+        ${ACCT_TABS.map(t2=>`<div class="acct-tab ${t===t2.k?'active':''}" data-action="acct-tab" data-tab="${t2.k}">${t2.l}</div>`).join('')}
+      </div>
+      <div style="flex:1;min-width:0;">${body}</div>
+    </div>`;
+}
+/* ===================== REQUESTS (مرکز درخواست‌های مالی) ===================== */
+const REQ_TABS = [
+  {k:'pending', l:'در انتظار بررسی'}, {k:'approved', l:'نیازمند انجام دستی'},
+  {k:'done', l:'انجام شد'}, {k:'rejected', l:'رد شده'}, {k:'all', l:'همه'},
+];
+function findReq(id){ return REQUESTS.find(r=>r.id===id); }
+function findMkt(id){ return MARKET.find(m=>m.id===id); }
+function pendingReq(){ return REQUESTS.filter(r=>r.status==='pending').length; }
+function pendingMkt(){ return MARKET.filter(m=>m.status==='pending'||m.status==='settle').length; }
+function reqFiltered(){
+  const q = state.reqSearch.trim();
+  return REQUESTS
+    .filter(r=> state.reqTab==='all' || r.status===state.reqTab)
+    .filter(r=> !q || r.user.includes(q) || r.ref.includes(q) || findProject(r.project).name.includes(q));
+}
+function renderRequests(){
+  const list = reqFiltered();
+  return `
+    <div class="pipe">
+      <div class="pipe-step"><span class="pn">۱</span> ثبت درخواست توسط کاربر</div>
+      <span class="pipe-arrow">${I.chevLeft}</span>
+      <div class="pipe-step"><span class="pn">۲</span> بررسی و تأیید / رد توسط کارشناس یا ادمین</div>
+      <span class="pipe-arrow">${I.chevLeft}</span>
+      <div class="pipe-step"><span class="pn">۳</span> انجام دستی عملیات مالی و ثبت رسید</div>
+    </div>
+    <div class="filter-bar">
+      <div class="chip-row">
+        ${REQ_TABS.map(t=>`<button class="chip ${state.reqTab===t.k?'active':''}" data-action="req-tab" data-tab="${t.k}">${t.l}</button>`).join('')}
+      </div>
+      <div class="search-box">${I.search}<input data-field="req-search" placeholder="جستجوی نام، شماره درخواست یا پروژه…" value="${esc(state.reqSearch)}"/></div>
+    </div>
+    <div class="card" style="overflow:hidden;">
+      ${list.length ? `<table class="dt">
+        <thead><tr>
+          <th>نوع درخواست</th><th>درخواست‌کننده</th><th>پروژه</th><th>خشت</th><th>مبلغ</th><th>تاریخ</th><th>وضعیت</th><th style="text-align:left;">عملیات</th>
+        </tr></thead>
+        <tbody>
+          ${list.map(r=>{
+            const p = findProject(r.project), st = REQ_STATUS[r.status];
+            return `<tr>
+              <td><span class="badge ${REQ_TYPE[r.type].c}">${REQ_TYPE[r.type].l}</span></td>
+              <td><div style="font-weight:700;">${esc(r.user)}</div><div style="font-size:11px;color:var(--text-faint);direction:ltr;">${esc(r.phone)}</div><div style="font-size:10.5px;color:var(--primary);margin-top:2px;">${esc(r.ref)}</div></td>
+              <td style="font-size:12.5px;">${esc(p.name)}</td>
+              <td class="num">${r.qty? toFa(r.qty) : '<span style="color:var(--text-faint);">—</span>'}</td>
+              <td class="num" style="font-weight:700;">${money(r.amount)}</td>
+              <td style="font-size:12px;color:var(--text-muted);white-space:nowrap;">${esc(r.date)}</td>
+              <td><span class="badge ${st.c}">${st.l}</span></td>
+              <td><div class="row-btns">
+                ${r.status==='pending'
+                  ? `<button class="btn btn-primary btn-sm" data-action="open-req" data-id="${r.id}">بررسی درخواست</button>`
+                  : r.status==='approved'
+                  ? `<button class="btn btn-soft btn-sm" data-action="open-req" data-id="${r.id}">${I.check} انجام دستی</button>`
+                  : `<button class="btn btn-ghost btn-sm" data-action="open-req" data-id="${r.id}">${I.eye} جزئیات</button>`}
+              </div></td>
+            </tr>`;}).join('')}
+        </tbody></table>`
+      : emptyState('درخواستی در این مرحله نیست','درخواست‌های مالی جدید کاربران پس از ثبت در این صفحه نمایش داده می‌شوند.','','')}
+    </div>`;
+}
+function execBlock(ex, label){
+  return `<div class="card" style="padding:14px 18px;margin-bottom:16px;border:1px solid var(--primary);background:var(--primary-light);">
+    <div style="font-size:13px;font-weight:800;color:var(--primary-dark);display:flex;align-items:center;gap:7px;margin-bottom:10px;">${I.check} ${esc(label||'رسید انجام دستی')}</div>
+    <div class="detail-grid">
+      <div class="detail-cell"><div class="dc-k">انجام‌دهنده</div><div class="dc-v">${esc(ex.by)}</div></div>
+      <div class="detail-cell"><div class="dc-k">شماره رسید بانکی</div><div class="dc-v"><span class="code-pill">${esc(ex.receipt)}</span></div></div>
+      <div class="detail-cell"><div class="dc-k">تاریخ انجام</div><div class="dc-v">${esc(ex.date)}</div></div>
+      <div class="detail-cell"><div class="dc-k">یادداشت عملیات</div><div class="dc-v" style="font-size:12.5px;">${esc(ex.note)}</div></div>
+    </div></div>`;
+}
+function manualWarn(title, text){
+  return `<div class="expert-box" style="background:var(--warning-light);border-color:rgba(176,122,30,.25);margin-bottom:16px;">
+    <div class="ex-title" style="color:var(--warning);">${I.warn} ${esc(title)}</div>
+    <div class="ex-text">${esc(text)}</div></div>`;
+}
+function requestModal(r){
+  const p = findProject(r.project);
+  const editable = r.status==='pending';
+  const rt = REQ_TYPE[r.type];
+  const body = `
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      <span class="badge ${rt.c}">${rt.l}</span>
+      <span class="code-pill">${esc(r.ref)}</span>
+      <span class="badge ${REQ_STATUS[r.status].c}">${REQ_STATUS[r.status].l}</span>
+    </div>
+    <div class="detail-grid" style="margin-bottom:16px;">
+      <div class="detail-cell"><div class="dc-k">درخواست‌کننده</div><div class="dc-v">${esc(r.user)}</div></div>
+      <div class="detail-cell"><div class="dc-k">شماره تماس</div><div class="dc-v" style="direction:ltr;">${esc(r.phone)}</div></div>
+      <div class="detail-cell"><div class="dc-k">پروژه</div><div class="dc-v" style="font-size:12.5px;">${esc(p.name)}</div></div>
+      <div class="detail-cell"><div class="dc-k">نوع عملیات</div><div class="dc-v">${rt.l}</div></div>
+      <div class="detail-cell"><div class="dc-k">تعداد خشت</div><div class="dc-v">${r.qty? toFa(r.qty) : '—'}</div></div>
+      <div class="detail-cell"><div class="dc-k">مبلغ درخواست</div><div class="dc-v highlight">${money(r.amount)}</div></div>
+      <div class="detail-cell"><div class="dc-k">روش / مقصد</div><div class="dc-v">${esc(r.method)}</div></div>
+      <div class="detail-cell"><div class="dc-k">تاریخ ثبت</div><div class="dc-v">${esc(r.date)}</div></div>
+    </div>
+    <div class="expert-box" style="margin-bottom:16px;"><div class="ex-title">${I.doc} توضیحات درخواست</div><div class="ex-text">${esc(r.note)}</div></div>
+    ${r.reason?`<div class="expert-box" style="background:var(--danger-light);border-color:rgba(179,57,44,.2);margin-bottom:16px;"><div class="ex-title" style="color:var(--danger);">${I.warn} دلیل رد</div><div class="ex-text">${esc(r.reason)}</div></div>`:''}
+    ${r.exec? execBlock(r.exec):''}
+    ${editable?`<div class="field"><label>دلیل رد (در صورت رد درخواست)</label>
+      <textarea data-field="req-reason" rows="2" placeholder="در صورت تأیید نیازی به پر کردن این فیلد نیست."></textarea></div>`:''}`;
+  const foot = editable
+    ? `<button class="btn btn-danger-soft" data-action="req-reject" data-id="${r.id}">${I.x} رد درخواست</button>
+       <button class="btn btn-primary" data-action="req-approve" data-id="${r.id}">${I.check} تأیید درخواست</button>`
+    : `<button class="btn btn-ghost" data-action="close-modal">بستن</button>`;
+  return modalShell(`درخواست ${rt.l} — ${esc(r.ref)}`, body, foot, true);
+}
+function execModal(r){
+  const p = findProject(r.project);
+  const rt = REQ_TYPE[r.type];
+  const body = `
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      <span class="badge ${rt.c}">${rt.l}</span>
+      <span class="code-pill">${esc(r.ref)}</span>
+      <span class="badge ${REQ_STATUS.approved.c}">${REQ_STATUS.approved.l}</span>
+    </div>
+    ${manualWarn('مرحله انجام دستی','درخواست تأیید شده است. اکنون عملیات مالی (انتقال وجه، تخصیص خشت یا بازگرداندن مبلغ) را در سامانه بانکی انجام دهید و سپس رسید آن را ثبت کنید تا درخواست تکمیل شود.')}
+    <div class="detail-grid" style="margin-bottom:16px;">
+      <div class="detail-cell"><div class="dc-k">درخواست‌کننده</div><div class="dc-v">${esc(r.user)}</div></div>
+      <div class="detail-cell"><div class="dc-k">پروژه</div><div class="dc-v" style="font-size:12.5px;">${esc(p.name)}</div></div>
+      <div class="detail-cell"><div class="dc-k">مبلغ</div><div class="dc-v highlight">${money(r.amount)}</div></div>
+      <div class="detail-cell"><div class="dc-k">مقصد / روش</div><div class="dc-v">${esc(r.method)}</div></div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>شماره رسید / فیش بانکی <span style="color:var(--danger);">*</span></label>
+        <input data-field="ex-receipt" placeholder="مثلاً ۱۴-۸۸۲۳۱۴۵" style="direction:ltr;"/></div>
+      <div class="field"><label>تاریخ انجام <span style="color:var(--danger);">*</span></label>
+        <input data-field="ex-date" value="${stamp()}" style="direction:ltr;"/></div>
+      <div class="field full"><label>یادداشت عملیات</label>
+        <textarea data-field="ex-note" rows="2" placeholder="مثلاً: مبلغ به شبا انبوه‌ساز واریز و خشت‌ها به کیف پول خریدار تخصیص یافت."></textarea></div>
+    </div>`;
+  const foot = `<button class="btn btn-ghost" data-action="modal-back">بازگشت</button>
+    <button class="btn btn-primary" data-action="req-exec-save" data-id="${r.id}">${I.check} ثبت رسید و تکمیل درخواست</button>`;
+  return modalShell('انجام دستی — '+rt.l, body, foot, true);
+}
+/* ===================== MARKET (بازار ثانویه) ===================== */
+const MKT_TABS = [
+  {k:'pending', l:'در انتظار تأیید عرضه'}, {k:'active', l:'در انتظار خریدار'},
+  {k:'settle', l:'نیازمند تسویه دستی'}, {k:'done', l:'تسویه شد'}, {k:'rejected', l:'رد شده'}, {k:'all', l:'همه'},
+];
+function renderMarket(){
+  const list = MARKET.filter(m=> state.mktTab==='all' || m.status===state.mktTab);
+  const doneDeals = MARKET.filter(m=>m.status==='done');
+  const stat = (icon,tone,label,val,sub)=>`
+    <div class="card stat-card">
+      <div class="st-top"><div class="st-label">${label}</div>
+        <div class="st-icon" style="background:var(--${tone}-light);color:var(--${tone});">${I[icon]}</div></div>
+      <div class="st-val">${val}</div><div class="st-sub">${sub}</div></div>`;
+  return `
+    <div class="stat-grid" style="margin-bottom:18px;">
+      ${stat('pin','warning','عرضه در انتظار تأیید', toFa(MARKET.filter(m=>m.status==='pending').length), 'نیازمند بررسی کارشناس / ادمین')}
+      ${stat('coin','gold','در انتظار تسویه دستی', toFa(MARKET.filter(m=>m.status==='settle').length), 'خرید تأیید شده، رسید ثبت نشده')}
+      ${stat('activity','primary','عرضه فعال بازار', toFa(MARKET.filter(m=>m.status==='active').length), 'آماده تطابق با خریدار')}
+      ${stat('chart','info','حجم معاملات تسویه‌شده', money(doneDeals.reduce((s,m)=>s+m.amount,0)), toFa(doneDeals.length)+' معامله موفق')}
+    </div>
+    <div class="filter-bar">
+      <div class="chip-row">
+        ${MKT_TABS.map(t=>`<button class="chip ${state.mktTab===t.k?'active':''}" data-action="mkt-tab" data-tab="${t.k}">${t.l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="card" style="overflow:hidden;">
+      ${list.length ? `<table class="dt">
+        <thead><tr>
+          <th>پروژه</th><th>فروشنده</th><th>خریدار</th><th>خشت</th><th>قیمت واحد</th><th>مبلغ کل</th><th>وضعیت</th><th style="text-align:left;">عملیات</th>
+        </tr></thead>
+        <tbody>
+          ${list.map(m=>{
+            const p = findProject(m.project), st = MKT_STATUS[m.status];
+            return `<tr>
+              <td><div style="font-weight:700;">${esc(p.name)}</div></td>
+              <td><div style="font-weight:700;">${esc(m.seller)}</div><div style="font-size:10.5px;color:var(--primary);margin-top:2px;">${esc(m.ref)}</div></td>
+              <td style="font-size:12.5px;">${m.buyer? esc(m.buyer) : '<span style="color:var(--text-faint);">هنوز ثبت نشده</span>'}</td>
+              <td class="num">${toFa(m.qty)}</td>
+              <td class="num">${money(m.unit)}</td>
+              <td class="num" style="font-weight:700;">${money(m.amount)}</td>
+              <td><span class="badge ${st.c}">${st.l}</span></td>
+              <td><div class="row-btns">
+                ${m.status==='pending'
+                  ? `<button class="btn btn-primary btn-sm" data-action="open-market" data-id="${m.id}">بررسی عرضه</button>`
+                  : m.status==='active'
+                  ? `<button class="btn btn-soft btn-sm" data-action="mkt-match" data-id="${m.id}">${I.check} ثبت خریدار</button>`
+                  : m.status==='settle'
+                  ? `<button class="btn btn-primary btn-sm" data-action="mkt-settle" data-id="${m.id}">${I.check} تسویه دستی</button>`
+                  : `<button class="btn btn-ghost btn-sm" data-action="open-market" data-id="${m.id}">${I.eye} جزئیات</button>`}
+              </div></td>
+            </tr>`;}).join('')}
+        </tbody></table>`
+      : emptyState('عرضه‌ای در این دسته نیست','عرضه‌های جدید بازار ثانویه پس از ثبت سرمایه‌گذاران در این صفحه نمایش داده می‌شوند.','','')}
+    </div>`;
+}
+function marketModal(m){
+  const p = findProject(m.project);
+  const editable = m.status==='pending';
+  const body = `
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      <span class="badge badge-done">بازار ثانویه</span>
+      <span class="code-pill">${esc(p.name)}</span>
+      <span class="badge ${MKT_STATUS[m.status].c}">${MKT_STATUS[m.status].l}</span>
+    </div>
+    <div class="detail-grid" style="margin-bottom:16px;">
+      <div class="detail-cell"><div class="dc-k">پروژه</div><div class="dc-v" style="font-size:12.5px;">${esc(p.name)}</div></div>
+      <div class="detail-cell"><div class="dc-k">فروشنده</div><div class="dc-v">${esc(m.seller)}</div></div>
+      <div class="detail-cell"><div class="dc-k">خریدار</div><div class="dc-v">${m.buyer? esc(m.buyer) : '<span style="color:var(--text-faint);">ثبت نشده</span>'}</div></div>
+      <div class="detail-cell"><div class="dc-k">تعداد خشت</div><div class="dc-v">${toFa(m.qty)}</div></div>
+      <div class="detail-cell"><div class="dc-k">قیمت واحد</div><div class="dc-v">${money(m.unit)}</div></div>
+      <div class="detail-cell"><div class="dc-k">مبلغ کل</div><div class="dc-v highlight">${money(m.amount)}</div></div>
+      <div class="detail-cell"><div class="dc-k">تاریخ عرضه</div><div class="dc-v">${esc(m.date)}</div></div>
+    </div>
+    <div class="expert-box" style="margin-bottom:16px;"><div class="ex-title">${I.doc} توضیحات عرضه</div><div class="ex-text">${esc(m.note)}</div></div>
+    ${m.reason?`<div class="expert-box" style="background:var(--danger-light);border-color:rgba(179,57,44,.2);margin-bottom:16px;"><div class="ex-title" style="color:var(--danger);">${I.warn} دلیل رد عرضه</div><div class="ex-text">${esc(m.reason)}</div></div>`:''}
+    ${m.exec? execBlock(m.exec,'رسید تسویه دستی'):''}
+    ${editable?`<div class="field"><label>دلیل رد (در صورت رد عرضه)</label>
+      <textarea data-field="mkt-reason" rows="2" placeholder="در صورت تأیید نیازی به پر کردن این فیلد نیست."></textarea></div>`:''}`;
+  const foot = editable
+    ? `<button class="btn btn-danger-soft" data-action="mkt-reject" data-id="${m.id}">${I.x} رد عرضه</button>
+       <button class="btn btn-primary" data-action="mkt-approve" data-id="${m.id}">${I.check} تأیید و فعال‌سازی عرضه</button>`
+    : `<button class="btn btn-ghost" data-action="close-modal">بستن</button>`;
+  return modalShell('جزئیات عرضه بازار ثانویه', body, foot, true);
+}
+function mktMatchModal(m){
+  const p = findProject(m.project);
+  const body = `
+    ${manualWarn('ثبت معامله بازار ثانویه','خریدار یافت شده است. نام خریدار را ثبت کنید تا عرضه وارد مرحله تسویه دستی شود.')}
+    <div class="detail-grid" style="margin-bottom:16px;">
+      <div class="detail-cell"><div class="dc-k">پروژه</div><div class="dc-v" style="font-size:12.5px;">${esc(p.name)}</div></div>
+      <div class="detail-cell"><div class="dc-k">فروشنده</div><div class="dc-v">${esc(m.seller)}</div></div>
+      <div class="detail-cell"><div class="dc-k">تعداد خشت</div><div class="dc-v">${toFa(m.qty)}</div></div>
+      <div class="detail-cell"><div class="dc-k">مبلغ کل</div><div class="dc-v highlight">${money(m.amount)}</div></div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>نام خریدار <span style="color:var(--danger);">*</span></label>
+        <input data-field="mk-buyer" placeholder="نام سرمایه‌گذار خریدار"/></div>
+      <div class="field"><label>تاریخ معامله</label>
+        <input data-field="mk-date" value="${stamp()}" style="direction:ltr;"/></div>
+    </div>`;
+  const foot = `<button class="btn btn-ghost" data-action="modal-back">بازگشت</button>
+    <button class="btn btn-primary" data-action="mkt-match-save" data-id="${m.id}">${I.check} ثبت معامله</button>`;
+  return modalShell('ثبت خریدار — '+esc(p.name), body, foot, true);
+}
+function mktSettleModal(m){
+  const p = findProject(m.project);
+  const body = `
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      <span class="badge badge-done">بازار ثانویه</span>
+      <span class="badge ${MKT_STATUS.settle.c}">${MKT_STATUS.settle.l}</span>
+    </div>
+    ${manualWarn('مرحله تسویه دستی','معامله تأیید شده است. مبلغ را به حساب فروشنده واریز، خشت‌ها را به کیف پول خریدار منتقل کنید و سپس رسید را ثبت نمایید.')}
+    <div class="detail-grid" style="margin-bottom:16px;">
+      <div class="detail-cell"><div class="dc-k">فروشنده</div><div class="dc-v">${esc(m.seller)}</div></div>
+      <div class="detail-cell"><div class="dc-k">خریدار</div><div class="dc-v">${esc(m.buyer)}</div></div>
+      <div class="detail-cell"><div class="dc-k">پروژه</div><div class="dc-v" style="font-size:12.5px;">${esc(p.name)}</div></div>
+      <div class="detail-cell"><div class="dc-k">مبلغ تسویه</div><div class="dc-v highlight">${money(m.amount)}</div></div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>شماره رسید / فیش واریز <span style="color:var(--danger);">*</span></label>
+        <input data-field="ms-receipt" placeholder="مثلاً ۱۴-۸۸۲۳۱۴۵" style="direction:ltr;"/></div>
+      <div class="field"><label>تاریخ تسویه <span style="color:var(--danger);">*</span></label>
+        <input data-field="ms-date" value="${stamp()}" style="direction:ltr;"/></div>
+      <div class="field full"><label>یادداشت عملیات</label>
+        <textarea data-field="ms-note" rows="2" placeholder="مثلاً: مبلغ به شبا فروشنده واریز و خشت‌ها به کیف پول خریدار منتقل شد."></textarea></div>
+    </div>`;
+  const foot = `<button class="btn btn-ghost" data-action="modal-back">بازگشت</button>
+    <button class="btn btn-primary" data-action="mkt-settle-save" data-id="${m.id}">${I.check} ثبت رسید و تکمیل تسویه</button>`;
+  return modalShell('تسویه دستی بازار ثانویه', body, foot, true);
+}
+/* مرحله انجام دستی آزادسازی وجه */
+function relExecModal(r){
+  const p = findProject(r.project);
+  const body = `
+    ${manualWarn('مرحله انجام دستی','درخواست آزادسازی وجه مرحله «'+r.phase+'» تأیید شده است. مبلغ را به شبا انبوه‌ساز واریز کنید و رسید را ثبت نمایید.')}
+    <div class="detail-grid" style="margin-bottom:16px;">
+      <div class="detail-cell"><div class="dc-k">پروژه</div><div class="dc-v" style="font-size:12.5px;">${esc(p.name)}</div></div>
+      <div class="detail-cell"><div class="dc-k">انبوه‌ساز</div><div class="dc-v" style="font-size:12.5px;">${esc(r.builder)}</div></div>
+      <div class="detail-cell"><div class="dc-k">مرحله</div><div class="dc-v">${esc(r.phase)}</div></div>
+      <div class="detail-cell"><div class="dc-k">مبلغ</div><div class="dc-v highlight">${r.amount? money(r.amount) : '—'}</div></div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>شماره رسید / فیش واریز <span style="color:var(--danger);">*</span></label>
+        <input data-field="rl-receipt" placeholder="مثلاً ۱۴-۸۸۲۳۱۴۵" style="direction:ltr;"/></div>
+      <div class="field"><label>تاریخ واریز <span style="color:var(--danger);">*</span></label>
+        <input data-field="rl-date" value="${stamp()}" style="direction:ltr;"/></div>
+      <div class="field full"><label>یادداشت</label>
+        <textarea data-field="rl-note" rows="2" placeholder="مثلاً: مبلغ به شبا شرکت انبوه‌ساز واریز شد."></textarea></div>
+    </div>`;
+  const foot = `<button class="btn btn-ghost" data-action="modal-back">بازگشت</button>
+    <button class="btn btn-primary" data-action="rel-exec-save" data-id="${r.id}">${I.check} ثبت رسید و تکمیل آزادسازی</button>`;
+  return modalShell('انجام دستی — آزادسازی وجه', body, foot, true);
+}
+
+const REL_TABS = [
+  {k:'pending', l:'در انتظار بررسی'}, {k:'approved', l:'نیازمند انجام دستی'}, {k:'done', l:'انجام شد'},
+  {k:'rejected', l:'رد شده'}, {k:'hold', l:'به تعویق افتاده'}, {k:'all', l:'همه'},
+];
+function renderReleases(){
+  const sub = state.relSub;
+  if(sub==='reports') return renderReportsView();
+  const list = RELEASES.filter(r=> state.relTab==='all' || r.status===state.relTab);
+  return `
+    <div class="tabs" style="margin-bottom:16px;">
+      <div class="tab ${state.relSub==='requests'?'active':''}" data-action="rel-sub" data-sub="requests">درخواست‌های آزادسازی وجه</div>
+      <div class="tab ${state.relSub==='reports'?'active':''}" data-action="rel-sub" data-sub="reports">گزارش‌های ماهانه پیشرفت ${pendingReports()?`<span class="count">${toFa(pendingReports())}</span>`:''}</div>
+    </div>
+    <div class="filter-bar">
+      <div class="chip-row">
+        ${REL_TABS.map(t=>`<button class="chip ${state.relTab===t.k?'active':''}" data-action="rel-tab" data-tab="${t.k}">${t.l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="card" style="overflow:hidden;">
+      ${list.length ? `<table class="dt">
+        <thead><tr>
+          <th>پروژه</th><th>انبوه‌ساز</th><th>مرحله</th><th>مبلغ درخواستی</th><th>پیشرفت برنامه‌ای</th><th>پیشرفت واقعی</th><th>مستندات</th><th>وضعیت</th><th style="text-align:left;">عملیات</th>
+        </tr></thead>
+        <tbody>
+          ${list.map(r=>`<tr>
+            <td><div style="font-weight:700;">${esc(findProject(r.project).name)}</div></td>
+            <td style="font-size:12.5px;">${esc(r.builder)}</td>
+            <td><span class="code-pill">${esc(r.phase)}</span></td>
+            <td class="num">${r.amount?money(r.amount):'<span style="color:var(--text-faint);">—</span>'}</td>
+            <td class="num">${toFa(r.plannedPct)}٪</td>
+            <td class="num" style="color:${r.actualPct>=r.plannedPct?'var(--primary-dark)':'var(--warning)'};font-weight:700;">${toFa(r.actualPct)}٪</td>
+            <td style="font-size:12px;color:var(--text-muted);">${toFa(r.docsCount)} فایل</td>
+            <td>${badge(REL_STATUS,r.status)}</td>
+            <td><div class="row-btns">
+              ${r.status==='pending'
+                ? `<button class="btn btn-primary btn-sm" data-action="open-release" data-id="${r.id}">${I.eye} بررسی مستندات</button>`
+                : r.status==='approved'
+                ? `<button class="btn btn-primary btn-sm" data-action="rel-exec" data-id="${r.id}">${I.check} انجام دستی انتقال وجه</button>`
+                : `<button class="btn btn-ghost btn-sm" data-action="open-release" data-id="${r.id}">${I.eye} جزئیات</button>`}
+            </div></td>
+          </tr>`).join('')}
+        </tbody></table>`
+      : emptyState('درخواست آزادسازی‌ای در این دسته نیست','درخواست‌های جدید انبوه‌سازان پس از ثبت در این صفحه نمایش داده می‌شوند.','','')}
+    </div>`;
+}
+function renderReportsView(){
+  const list = REPORTS;
+  const pend = list.filter(r=>r.status==='pending');
+  const done = list.filter(r=>r.status!=='pending');
+  const card = (r,open)=>`
+    <div class="card" style="padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:10px;">
+      <div class="sh-icon" style="background:var(--info-light);color:var(--info);flex-shrink:0;">${I.chart}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13.5px;font-weight:700;">${esc(r.title)}</div>
+        <div style="font-size:12px;color:var(--text-faint);margin-top:3px;line-height:1.8;">${esc(r.summary)}</div>
+        <div style="font-size:11.5px;color:var(--text-faint);margin-top:5px;">${esc(findProject(r.project).name)} — ${esc(r.month)} — ثبت ${esc(r.date)}</div>
+      </div>
+      ${badge(REPORT_STATUS,r.status)}
+      <button class="btn ${r.status==='pending'?'btn-primary':'btn-ghost'} btn-sm" data-action="open-report" data-id="${r.id}">${r.status==='pending'?'بررسی':'مشاهده'}</button>
+    </div>`;
+  return `
+    <div class="tabs" style="margin-bottom:16px;">
+      <div class="tab ${state.relSub==='requests'?'active':''}" data-action="rel-sub" data-sub="requests">درخواست‌های آزادسازی وجه</div>
+      <div class="tab ${state.relSub==='reports'?'active':''}" data-action="rel-sub" data-sub="reports">گزارش‌های ماهانه پیشرفت ${pendingReports()?`<span class="count">${toFa(pendingReports())}</span>`:''}</div>
+    </div>
+    ${pend.length?`<div class="section-head"><div><div class="section-title">در انتظار بررسی (${toFa(pend.length)})</div><div class="section-desc">گزارش‌های ماهانه ارسالی انبوه‌سازان</div></div></div>
+      ${pend.map(r=>card(r,true)).join('')}`:''}
+    ${done.length?`<div class="section-head" style="margin-top:8px;"><div><div class="section-title">بررسی شده (${toFa(done.length)})</div><div class="section-desc">آرشیو گزارش‌های تأیید یا رد شده</div></div></div>
+      ${done.map(r=>card(r,false)).join('')}`:''}
+    ${!list.length?emptyState('گزارشی ثبت نشده است','','',''):''}`;
+}
+
+/* ===================== KYC CENTER ===================== */
+const KYC_TABS = [
+  {k:'pending', l:'در انتظار بررسی'}, {k:'verified', l:'تأیید شده'}, {k:'rejected', l:'رد شده'}, {k:'all', l:'همه'},
+];
+function renderKyc(){
+  const list = KYCS.filter(k=> state.kycTab==='all' || k.status===state.kycTab);
+  return `
+    <div class="filter-bar">
+      <div class="chip-row">
+        ${KYC_TABS.map(t=>`<button class="chip ${state.kycTab===t.k?'active':''}" data-action="kyc-tab" data-tab="${t.k}">${t.l}</button>`).join('')}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;">
+      ${list.length ? list.map(k=>`
+        <div class="card" style="padding:16px 18px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div class="avatar" style="width:40px;height:40px;font-size:13.5px;">${esc(k.name.slice(0,2))}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:800;font-size:13.5px;">${esc(k.name)}</div>
+              <div style="font-size:11.5px;color:var(--text-faint);margin-top:1px;">ثبت درخواست: ${esc(k.date)}</div>
+            </div>
+            ${roleChip(k.role)}
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+            ${k.docs.map(d=>`<span class="badge ${DOC_STATUS[d.s].c}" style="font-size:10.5px;">${esc(d.n)}</span>`).join('')}
+          </div>
+          ${k.status==='rejected' && k.reason ? `<div class="expert-box"><div class="ex-title">${I.warn} دلیل رد:</div><div class="ex-text">${esc(k.reason)}</div></div>`:''}
+          <div style="display:flex;gap:8px;margin-top:14px;">
+            ${k.status==='pending'
+              ? `<button class="btn btn-primary" style="flex:1;justify-content:center;" data-action="open-kyc" data-id="${k.id}">${I.eye} بررسی مدارک</button>`
+              : `<button class="btn btn-ghost" style="flex:1;justify-content:center;" data-action="open-kyc" data-id="${k.id}">${I.eye} مشاهده جزئیات</button>`}
+          </div>
+        </div>`).join('')
+      : emptyState('درخواستی در این دسته نیست','مدارک جدید در مرکز احراز هویت قابل بررسی خواهند بود.','','')}
+    </div>`;
+}
+/* ===================== USER MANAGEMENT ===================== */
+function userFiltered(){
+  const q = state.userSearch.trim();
+  return USERS.filter(u=>{
+    if(state.userTab!=='all' && u.role!==state.userTab) return false;
+    if(u.status==='deleted') return false;
+    if(!q) return true;
+    return (u.name+' '+u.phone+' '+u.national).indexOf(q) >= 0;
+  });
+}
+function renderUsers(){
+  const list = userFiltered();
+  return `
+    <div class="stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr));margin-bottom:16px;">
+      ${statCard(I.users,'کاربران فعال', toFa(activeUsers()), 'سرمایه‌گذار و انبوه‌ساز', TONE.green)}
+      ${statCard(I.lock,'مسدود شده', toFa(blockedUsers()), 'موقت و دائم', TONE.red)}
+      ${statCard(I.doc,'در انتظار احراز هویت', toFa(USERS.filter(u=>u.kyc==='pending').length), 'مدارک نیازمند بررسی', TONE.gold)}
+      ${statCard(I.coin,'خشت کاربران', toFa(fmt(USERS.reduce((s,u)=>s+u.tokens,0))), 'مجموع سهم‌های فعال', TONE.blue)}
+    </div>
+    <div class="filter-bar">
+      <div class="chip-row">
+        ${USER_ROLE_TABS.map(t=>`<button class="chip ${state.userTab===t.k?'active':''}" data-action="user-tab" data-tab="${t.k}">${t.l}</button>`).join('')}
+      </div>
+      <div class="search-box" style="margin-right:auto;">${I.search}
+        <input data-field="user-search" placeholder="جستجوی نام، شماره تماس یا کد ملی..." value="${esc(state.userSearch)}">
+      </div>
+    </div>
+    ${list.length ? `
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="dt">
+        <thead><tr><th>کاربر</th><th>نقش</th><th>ارتباط</th><th>خشت</th><th>احراز هویت</th><th>وضعیت</th><th></th></tr></thead>
+        <tbody>
+        ${list.map(u=>`
+          <tr>
+            <td><div style="font-weight:700;">${esc(u.name)}</div>
+              <div style="font-size:11px;color:var(--text-faint);margin-top:2px;">کد ملی ${esc(u.national)} · ${esc(u.city)}</div></td>
+            <td>${roleChip(u.role)}</td>
+            <td style="font-size:12px;color:var(--text-muted);direction:ltr;text-align:right;">${esc(u.phone)}</td>
+            <td class="num">${u.tokens? toFa(u.tokens):'—'}</td>
+            <td>${badge(KYC_STATUS, u.kyc)}</td>
+            <td>${badge(USER_STATUS, u.status)}${u.blockReason?`<div style="font-size:10.5px;color:var(--danger);margin-top:3px;max-width:170px;line-height:1.6;">${esc(u.blockReason)}${u.blockUntil?' — تا '+esc(u.blockUntil):''}</div>`:''}</td>
+            <td><div class="row-btns">
+              <button class="btn btn-ghost btn-sm" data-action="open-user" data-id="${u.id}">مدیریت</button>
+            </div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` : emptyState('کاربری با این مشخصات یافت نشد', 'عبارت جستجو یا فیلتر انتخابی را تغییر دهید','','')}
+  `;
+}
+/* ===================== STAFF MANAGEMENT ===================== */
+function renderStaff(){
+  const list = STAFF.filter(s=> state.staffTab==='all' || s.role===state.staffTab);
+  return `
+    <div class="filter-bar">
+      <div class="chip-row">
+        ${STAFF_TABS.map(t=>`<button class="chip ${state.staffTab===t.k?'active':''}" data-action="staff-tab" data-tab="${t.k}">${t.l} <span style="opacity:.6;">(${toFa(staffOf(t.k))})</span></button>`).join('')}
+      </div>
+      <button class="btn btn-primary btn-sm" style="margin-right:auto;" data-action="new-staff">${I.plus} افزودن کارمند جدید</button>
+    </div>
+    <div class="staff-grid">
+      ${list.map(s=>`
+        <div class="card staff-card" style="padding:16px 18px;">
+          <div class="staff-top">
+            <div class="staff-av" style="background:${s.role==='admin'?'#EFEAF7':'var(--info-light)'};color:${s.role==='admin'?'#5F3E96':'var(--info)'};">${esc(s.name.charAt(0))}</div>
+            <div style="flex:1;min-width:0;">
+              <div class="staff-name">${esc(s.name)}</div>
+              <div class="staff-sub">${roleChip(s.role)} <span class="code-pill">${esc(s.emp)}</span></div>
+            </div>
+            ${badge(STAFF_STATUS, s.status)}
+          </div>
+          <div class="staff-meta">
+            <div><span>واحد / سمت</span><b>${esc(s.dept)}</b></div>
+            <div><span>شماره تماس</span><b style="direction:ltr;">${esc(s.phone)}</b></div>
+            <div><span>آخرین ورود</span><b>${esc(s.lastLogin)}</b></div>
+            <div><span>تأیید دومرحله‌ای</span>${s.twoFA?`<b style="color:var(--primary);">فعال ${I.check}</b>`:`<b style="color:var(--danger);">غیرفعال ${I.warn}</b>`}</div>
+          </div>
+          ${s.suspendReason?`<div class="msg-bubble" style="font-size:11.5px;">علت تعلیق: ${esc(s.suspendReason)}</div>`:''}
+          <div class="row-btns">
+            <button class="btn btn-soft btn-sm" data-action="edit-staff" data-id="${s.id}">${I.edit} ویرایش</button>
+            ${s.status==='suspended'
+              ? `<button class="btn btn-soft btn-sm" data-action="restore-staff" data-id="${s.id}">رفع تعلیق</button>`
+              : `<button class="btn btn-soft btn-sm" data-action="suspend-staff" data-id="${s.id}">تعلیق</button>`}
+            <button class="btn btn-ghost btn-sm" style="color:var(--danger);" data-action="del-staff" data-id="${s.id}">${I.trash} حذف</button>
+          </div>
+        </div>`).join('')}
+    </div>
+    ${list.length ? '' : emptyState('کارمندی در این بخش ثبت نشده است','برای ایجاد حساب ادمین یا کارشناس جدید از دکمه «افزودن کارمند جدید» استفاده کنید.','افزودن کارمند جدید','new-staff')}
+  `;
+}
+
+/* ===================== SECURITY SETTINGS ===================== */
+function renderSecurity(){
+  const rows = [
+    {key:'force2fa', t:'الزام تأیید دومرحله‌ای برای کارکنان', d:'هر ادمین و کارشناس هنگام ورود باید کد یکبار‌مصرف را وارد کند. غیرفعال‌سازی آن توصیه نمی‌شود.'},
+    {key:'rateLimit', t:'محدودسازی نرخ درخواست (Rate Limit)', d:'بیش از ۵ درخواست ناموفق ورود در دقیقه → قفل موقت حساب و اعلان به سوپر ادمین.'},
+    {key:'ipBind', t:'محدودسازی ورود به IP سازمانی', d:'دسترسی پنل‌های مدیریتی فقط از محدوده IP تعریف‌شده شرکت مجاز می‌شود.'},
+    {key:'logExport', t:'ثبت خروج گزارش‌های حساس در لاگ', d:'هرگونه دانلود گزارش مالی یا اطلاعات کاربران در تاریخچه فعالیت‌ها ثبت می‌شود.'},
+    {key:'delConfirm', t:'تأیید دو مرحله‌ای حذف حساب کاربران', d:'قبل از حذف قطعی حساب، تأیید مجدد با کد یکبار‌مصرف الزامی است.'},
+  ];
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="dash-2col">
+      <div class="card sec-card">
+        <div class="sec-head">
+          <div class="sh-icon" style="background:var(--primary-light);color:var(--primary-dark);">${I.shield}</div>
+          <div><div class="sh-title">تنظیمات امنیتی پلتفرم</div><div class="sh-desc">این تنظیمات روی همه کاربران و کارکنان اعمال می‌شود</div></div>
+        </div>
+        ${rows.map(r=>`
+          <div class="tgl-row">
+            <div class="tgl-info">
+              <div class="tgl-title">${r.t}</div>
+              <div class="tgl-desc">${r.d}</div>
+            </div>
+            <button class="tgl ${state.tgl[r.key]?'on':''}" data-action="sec-tgl" data-key="${r.key}" aria-label="${r.t}"></button>
+          </div>`).join('')}
+      </div>
+      <div class="card sec-card">
+        <div class="sec-head">
+          <div class="sh-icon" style="background:var(--gold-light);color:var(--gold);">${I.users}</div>
+          <div><div class="sh-title">سطوح دسترسی نقش‌ها</div><div class="sh-desc">ماتریس دسترسی هر نقش در پلتفرم</div></div>
+        </div>
+        <div style="padding:14px 16px;overflow-x:auto;">
+          <table class="dt" style="min-width:560px;">
+            <thead><tr><th style="text-align:right;">دسترسی</th>${ROLE_COLS.map(c=>`<th style="text-align:center;"><span class="role-chip ${c.c}">${c.l}</span></th>`).join('')}</tr></thead>
+            <tbody>
+            ${ACCESS_MATRIX.map(r=>`
+              <tr>
+                <td style="font-size:12px;font-weight:600;min-width:180px;">${esc(r.perm)}</td>
+                ${ROLE_COLS.map(c=>{
+                  const v = r.roles[c.k];
+                  return `<td style="text-align:center;">${v==='بله'?'<span class="perm-yes">✓</span>':'<span class="perm-no">—</span>'}</td>`;
+                }).join('')}
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="padding:16px 18px;margin-top:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:800;">لاگ فعالیت‌های حساس</div>
+        <span class="badge badge-draft">${toFa(SEC_LOG.length)} رخداد</span>
+      </div>
+      ${SEC_LOG.map(l=>`
+        <div class="queue-row">
+          <span class="log-sev s-${l.sev}">${l.sev==='high'?'حساس':l.sev==='med'?'متوسط':'عادی'}</span>
+          <div style="flex:1;min-width:0;"><div class="q-title" style="font-size:12.5px;">${esc(l.act)}</div>
+            <div class="log-act">${esc(l.who)} · ${esc(l.time)} · IP ${esc(l.ip)}</div></div>
+        </div>`).join('')}
+    </div>
+  `;
+}
+/* ===================== MODAL LAYER ===================== */
+function closeModal(){ state.modal = {type:null, id:null, extra:null}; }
+function modalShell(title, body, foot, narrow){
+  return `<div class="overlay" data-action="close-modal-bg">
+    <div class="modal ${narrow?'narrow':''}" role="dialog" aria-modal="true">
+      <div class="modal-head"><div class="modal-title">${title}</div>
+        <button class="modal-close" data-action="close-modal" aria-label="بستن">${I.x}</button></div>
+      <div class="modal-body">${body}</div>
+      ${foot?`<div class="modal-foot">${foot}</div>`:''}
+    </div></div>`;
+}
+function findRel(id){ return RELEASES.find(r=>r.id===id); }
+function findReport(id){ return REPORTS.find(r=>r.id===id); }
+function findKyc(id){ return KYCS.find(k=>k.id===id); }
+function findNotif(id){ return NOTIFS.find(n=>n.id===id); }
+
+function releaseModal(r){
+  const p = findProject(r.project);
+  const editable = r.status==='pending';
+  const diff = r.actualPct - r.plannedPct;
+  const body = `
+    <div class="detail-grid" style="margin-bottom:16px;">
+      <div class="detail-cell"><div class="dc-k">پروژه</div><div class="dc-v" style="font-size:12.5px;">${esc(p.name)}</div></div>
+      <div class="detail-cell"><div class="dc-k">انبوه‌ساز</div><div class="dc-v" style="font-size:12.5px;">${esc(r.builder)}</div></div>
+      <div class="detail-cell"><div class="dc-k">مرحله</div><div class="dc-v">${esc(r.phase)}</div></div>
+      <div class="detail-cell"><div class="dc-k">مبلغ درخواستی</div><div class="dc-v highlight">${r.amount? money(r.amount) : '—'}</div></div>
+      <div class="detail-cell"><div class="dc-k">تاریخ درخواست</div><div class="dc-v">${esc(r.date)}</div></div>
+      <div class="detail-cell"><div class="dc-k">تعداد مستندات</div><div class="dc-v">${toFa(r.docsCount)} مورد</div></div>
+    </div>
+    <div class="card" style="padding:16px 18px;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;">مقایسه پیشرفت برنامه‌ای و واقعی</div>
+      <div class="cmp-wrap">
+        <div class="cmp-label">پیشرفت برنامه‌ای</div>
+        <div class="cmp-bar"><div style="width:${r.plannedPct}%"></div></div>
+        <div class="cmp-num">${toFa(r.plannedPct)}٪</div>
+      </div>
+      <div class="cmp-wrap">
+        <div class="cmp-label">پیشرفت واقعی</div>
+        <div class="cmp-bar"><div style="width:${r.actualPct}%;background:${diff<0?'var(--gold)':'var(--primary)'};"></div></div>
+        <div class="cmp-num">${toFa(r.actualPct)}٪</div>
+      </div>
+      <div style="font-size:12px;color:${diff<0?'var(--gold)':'var(--primary-dark)'};margin-top:10px;display:flex;align-items:center;gap:6px;">
+        ${diff<0?I.warn:I.check}<span>اختلاف ${diff<0?Math.abs(diff)+'٪ تأخیر':'مطابق یا جلوتر از برنامه'}</span></div>
+    </div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px;">مستندات ارسالی</div>
+    <div class="card" style="padding:10px 18px;margin-bottom:16px;">
+      ${r.docs.map(d=>`<div class="kv-row"><span class="k" style="display:flex;align-items:center;gap:7px;">${I.doc}<span style="font-weight:500;">${esc(d)}</span></span>${badge(DOC_STATUS,'approved')}</div>`).join('')}
+    </div>
+    ${r.exec? execBlock(r.exec,'رسید واریز وجه'):''}
+    <div class="expert-box"><div class="ex-title">${I.info} یادداشت کارشناس پیشین</div><div class="ex-text">${esc(r.note)}</div></div>
+    ${editable?`<div class="field" style="margin-top:16px;"><label>دلیل رد یا تعلیق (اختیاری در صورت تأیید)</label>
+      <textarea data-field="rel-reason" rows="2" placeholder="در صورت رد یا تعلیق آزادسازی، دلیل را ثبت کنید."></textarea></div>`:''}`;
+  const foot = editable
+    ? `<button class="btn btn-danger-soft" data-action="rel-reject" data-id="${r.id}">${I.x} رد درخواست</button>
+       <button class="btn btn-soft" data-action="rel-hold" data-id="${r.id}">${I.clock} تعلیق موقت</button>
+       <button class="btn btn-primary" data-action="rel-approve" data-id="${r.id}">${I.check} تأیید آزادسازی</button>`
+    : (r.status==='approved'
+      ? `<button class="btn btn-ghost" data-action="close-modal">بستن</button>
+         <button class="btn btn-primary" data-action="rel-exec" data-id="${r.id}">${I.check} انجام دستی انتقال وجه</button>`
+      : `<span class="badge badge-${r.status==='done'?'active':r.status==='hold'?'pending':'rejected'}">${REL_STATUS[r.status].l}</span>
+         <button class="btn btn-ghost" data-action="close-modal">بستن</button>`);
+  return modalShell(`درخواست آزادسازی وجه — ${esc(r.phase)}`, body, foot);
+}
+function reportModal(rp){
+  const p = findProject(rp.project);
+  const editable = rp.status==='pending';
+  const body = `
+    <div class="detail-grid" style="margin-bottom:16px;">
+      <div class="detail-cell"><div class="dc-k">پروژه</div><div class="dc-v" style="font-size:12.5px;">${esc(p.name)}</div></div>
+      <div class="detail-cell"><div class="dc-k">دوره</div><div class="dc-v">${esc(rp.month)}</div></div>
+      <div class="detail-cell"><div class="dc-k">تاریخ ارسال</div><div class="dc-v">${esc(rp.date)}</div></div>
+      <div class="detail-cell"><div class="dc-k">وضعیت</div><div class="dc-v">${badge(REPORT_STATUS,rp.status)}</div></div>
+    </div>
+    <div class="card" style="padding:16px 18px;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;">${esc(rp.title)}</div>
+      <p style="font-size:13px;color:var(--text-muted);line-height:2;margin:0;">${esc(rp.summary)}</p>
+    </div>
+    ${editable?`<div class="field"><label>دلیل رد (در صورت رد گزارش)</label>
+      <textarea data-field="rp-reason" rows="2" placeholder="در صورت تأیید نیازی به پر کردن این فیلد نیست."></textarea></div>`:''}`;
+  const foot = editable
+    ? `<button class="btn btn-danger-soft" data-action="rp-reject" data-id="${rp.id}">${I.x} رد گزارش</button>
+       <button class="btn btn-primary" data-action="rp-approve" data-id="${rp.id}">${I.check} تأیید گزارش</button>`
+    : `<button class="btn btn-ghost" data-action="close-modal">بستن</button>`;
+  return modalShell(`گزارش ماهانه پیشرفت`, body, foot, true);
+}
+function kycModal(k){
+  const editable = k.status==='pending';
+  const body = `
+    <div class="detail-grid" style="margin-bottom:16px;">
+      <div class="detail-cell"><div class="dc-k">نام</div><div class="dc-v">${esc(k.name)}</div></div>
+      <div class="detail-cell"><div class="dc-k">نوع کاربر</div><div class="dc-v">${roleChip(k.role)}</div></div>
+      <div class="detail-cell"><div class="dc-k">تاریخ ارسال</div><div class="dc-v">${esc(k.date)}</div></div>
+      <div class="detail-cell"><div class="dc-k">وضعیت کلی</div><div class="dc-v">${badge(KYC_STATUS,k.status)}</div></div>
+    </div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px;">مدارک ارسالی</div>
+    <div class="card" style="padding:6px 18px 12px;margin-bottom:16px;">
+      ${k.docs.map((d,i)=>`<div class="kv-row">
+        <span class="k" style="display:flex;align-items:center;gap:7px;">${I.doc}<span style="font-weight:500;">${esc(d.n)}</span></span>
+        ${editable
+          ? `<select data-field="kyc-doc" data-idx="${i}">
+               <option value="pending" ${d.s==='pending'?'selected':''}>در حال بررسی</option>
+               <option value="approved" ${d.s==='approved'?'selected':''}>تأیید شد</option>
+               <option value="rejected" ${d.s==='rejected'?'selected':''}>رد شد</option>
+             </select>`
+          : badge(DOC_STATUS,d.s)}
+      </div>`).join('')}
+    </div>
+    ${k.reason?`<div class="expert-box" style="background:var(--danger-light);border-color:rgba(179,57,44,.2);"><div class="ex-title" style="color:var(--danger);">${I.warn} دلیل رد احراز هویت</div><div class="ex-text">${esc(k.reason)}</div></div>`:''}
+    ${editable?`<div class="field"><label>دلیل رد کلی (در صورت رد درخواست)</label>
+      <textarea data-field="kyc-reason" rows="2" placeholder="در صورت تأیید نیازی به پر کردن این فیلد نیست."></textarea></div>`:''}`;
+  const foot = editable
+    ? `<button class="btn btn-danger-soft" data-action="kyc-reject" data-id="${k.id}">${I.x} رد مدارک</button>
+       <button class="btn btn-primary" data-action="kyc-approve" data-id="${k.id}">${I.check} تأیید و فعال‌سازی حساب</button>`
+    : `<button class="btn btn-ghost" data-action="close-modal">بستن</button>`;
+  return modalShell(`بررسی مدارک احراز هویت`, body, foot);
+}
+function notifModal(n){
+  const body = `
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px;">${esc(n.title)}</div>
+    <p style="font-size:13px;color:var(--text-muted);line-height:2;margin:0 0 14px;">${esc(n.desc)}</p>
+    <div class="kv-row"><span class="k">زمان</span><span class="v">${esc(n.time)}</span></div>`;
+  return modalShell('جزئیات اعلان', body,
+    `<button class="btn btn-ghost" data-action="close-modal">بستن</button>`, true);
+}
+function passModal(){
+  const body = `
+    <div class="field"><label>رمز عبور فعلی</label><input type="password" data-field="cur-pass" placeholder="••••••••" style="direction:ltr;"/></div>
+    <div class="field"><label>رمز عبور جدید</label><input type="password" data-field="new-pass" placeholder="حداقل ۸ کاراکتر" style="direction:ltr;"/></div>
+    <div class="field"><label>تکرار رمز عبور جدید</label><input type="password" data-field="rep-pass" placeholder="تکرار رمز جدید" style="direction:ltr;"/></div>`;
+  return modalShell('تغییر رمز عبور', body,
+    `<button class="btn btn-ghost" data-action="close-modal">انصراف</button>
+     <button class="btn btn-primary" data-action="pass-save">${I.check} ثبت رمز جدید</button>`, true);
+}
+function renderModal(){
+  const m = state.modal;
+  if(m.type==='req'){ const r = findReq(m.id); if(!r) return ''; return state.modal.extra==='exec' ? execModal(r) : requestModal(r); }
+  if(m.type==='market'){ const m2 = findMkt(m.id); if(!m2) return '';
+    return state.modal.extra==='match' ? mktMatchModal(m2) : state.modal.extra==='settle' ? mktSettleModal(m2) : marketModal(m2); }
+  if(m.type==='release'){ const r = findRel(m.id); if(!r) return ''; return state.modal.extra==='exec' ? relExecModal(r) : releaseModal(r); }
+  if(m.type==='report'){ const r = findReport(m.id); return r? reportModal(r):''; }
+  if(m.type==='kyc'){ const k = findKyc(m.id); return k? kycModal(k):''; }
+  if(m.type==='notif'){ const n = findNotif(m.id); return n? notifModal(n):''; }
+  if(m.type==='pass'){ return passModal(); }
+  return '';
+}
+function renderConfirm(){
+  const c = state.confirm;
+  return `<div class="overlay" data-action="close-modal-bg">
+    <div class="confirm-modal" role="alertdialog" aria-modal="true">
+      <div class="confirm-icon">${I.warn}</div>
+      <div class="confirm-title">${esc(c.title)}</div>
+      <div class="confirm-msg">${esc(c.msg)}</div>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" data-action="confirm-no">انصراف</button>
+        <button class="btn btn-danger" data-action="confirm-yes">${esc(c.confirmLabel)}</button>
+      </div>
+    </div></div>`;
+}
+
+/* ===================== ADMIN MODALS ===================== */
+function builderModal(b){
+  const editable = b.status==='pending';
+  const body = `
+    <div class="detail-grid" style="margin-bottom:16px;">
+      <div class="detail-cell"><div class="dc-k">نام</div><div class="dc-v">${esc(b.name)}</div></div>
+      <div class="detail-cell"><div class="dc-k">نوع شخصیت</div><div class="dc-v">${esc(b.type)}</div></div>
+      <div class="detail-cell"><div class="dc-k">شهر</div><div class="dc-v">${esc(b.city)}</div></div>
+      <div class="detail-cell"><div class="dc-k">سرمایه اعلامی</div><div class="dc-v">${esc(b.capital)}</div></div>
+      <div class="detail-cell"><div class="dc-k">تاریخ درخواست</div><div class="dc-v">${esc(b.date)}</div></div>
+      <div class="detail-cell"><div class="dc-k">تماس</div><div class="dc-v" style="direction:ltr;">${esc(b.phone)}</div></div>
+      <div class="detail-cell"><div class="dc-k">کد ملی / ملی شرکت</div><div class="dc-v" style="direction:ltr;">${esc(b.national)}</div></div>
+      <div class="detail-cell"><div class="dc-k">وضعیت</div><div class="dc-v">${badge(BUILDER_STATUS,b.status)}</div></div>
+    </div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px;">مدارک ارسالی</div>
+    <div class="card" style="padding:6px 18px 12px;margin-bottom:16px;">
+      ${b.docs.map(d=>`<div class="kv-row">
+        <span class="k" style="display:flex;align-items:center;gap:7px;">${I.doc}<span style="font-weight:500;">${esc(d.n)}</span></span>
+        ${editable
+          ? `<select data-field="b-doc" data-name="${esc(d.n)}">
+               <option value="pending" ${d.s==='pending'?'selected':''}>در حال بررسی</option>
+               <option value="approved" ${d.s==='approved'?'selected':''}>تأیید شد</option>
+               <option value="rejected" ${d.s==='rejected'?'selected':''}>رد شد</option>
+             </select>`
+          : badge(DOC_STATUS,d.s)}
+      </div>`).join('')}
+    </div>
+    <div class="expert-box"><div class="ex-title">${I.info} یادداشت سیستم</div><div class="ex-text">${esc(b.note)}</div></div>
+    ${b.reason?`<div class="expert-box" style="background:var(--danger-light);border-color:rgba(179,57,44,.2);margin-top:14px;"><div class="ex-title" style="color:var(--danger);">${I.warn} دلیل رد</div><div class="ex-text">${esc(b.reason)}</div></div>`:''}
+    ${editable?`<div class="field" style="margin-top:16px;"><label>دلیل رد یا درخواست اصلاح (در صورت تأیید نیازی نیست)</label>
+      <textarea data-field="b-reason" rows="2" placeholder="در صورت رد درخواست، دلیل را برای کاربر ثبت کنید."></textarea></div>`:''}`;
+  const foot = editable
+    ? `<button class="btn btn-danger-soft" data-action="builder-reject" data-id="${b.id}">${I.x} رد درخواست</button>
+       <button class="btn btn-primary" data-action="builder-approve" data-id="${b.id}">${I.check} تأیید انبوه‌ساز</button>`
+    : `<button class="btn btn-ghost" data-action="close-modal">بستن</button>`;
+  return modalShell(`بررسی درخواست انبوه‌ساز`, body, foot);
+}
+function ticketModal(t){
+  const body = `
+    <div class="detail-grid" style="margin-bottom:16px;">
+      <div class="detail-cell"><div class="dc-k">کاربر</div><div class="dc-v">${esc(t.user)}</div></div>
+      <div class="detail-cell"><div class="dc-k">نوع کاربر</div><div class="dc-v">${roleChip(t.role)}</div></div>
+      <div class="detail-cell"><div class="dc-k">اولویت</div><div class="dc-v"><span class="badge ${PRIO[t.priority].c}">${PRIO[t.priority].l}</span></div></div>
+      <div class="detail-cell"><div class="dc-k">وضعیت</div><div class="dc-v">${badge(TICKET_STATUS,t.status)}</div></div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px;">
+      <div class="chat-box">
+        ${t.msgs.map(m=>`<div class="msg-bubble ${m.me?'agent':''}">
+          <div class="msg-meta"><b>${esc(m.from)}</b><span>${esc(m.t)}</span></div>
+          <div>${esc(m.text)}</div>
+        </div>`).join('')}
+      </div>
+      ${t.status!=='closed' ? `<div style="padding:14px 18px;border-top:1px solid var(--border-soft);">
+        <div class="field"><label>پاسخ به تیکت</label>
+        <textarea data-field="tk-reply" rows="3" placeholder="متن پاسخ…"></textarea></div>
+        <div class="row-btns" style="margin-top:10px;">
+          <button class="btn btn-soft" data-action="ticket-close" data-id="${t.id}">${I.x} بستن تیکت</button>
+          <button class="btn btn-primary" data-action="ticket-reply" data-id="${t.id}">${I.send} ارسال پاسخ</button>
+        </div></div>`
+      : `<div style="padding:14px 18px;font-size:12px;color:var(--text-faint);border-top:1px solid var(--border-soft);">این تیکت بسته شده است.</div>`}
+    </div>`;
+  return modalShell(`تیکت: ${esc(t.subject)}`, body, null);
+}
+function entryModal(e, isNew){
+  const body = `
+    <div class="form-grid">
+      <div class="field full"><label>عنوان مقاله</label>
+        <input data-field="e-title" value="${esc(e?e.title:'')}" placeholder="عنوان…"/></div>
+      <div class="field"><label>دسته‌بندی</label>
+        <select data-field="e-cat">
+          ${['مفاهیم پایه','سرمایه‌گذاری','امنیت','قوانین و مقررات'].map(c=>`<option ${e&&e.cat===c?'selected':''}>${c}</option>`).join('')}
+        </select></div>
+      <div class="field"><label>وضعیت</label>
+        <select data-field="e-status">
+          <option value="published" ${e&&e.status==='published'?'selected':''}>منتشر شده</option>
+          <option value="review" ${e&&e.status==='review'?'selected':''}>در حال بازبینی</option>
+          <option value="draft" ${e&&e.status==='draft'?'selected':''}>پیش‌نویس</option>
+        </select></div>
+      <div class="field full"><label>خلاصه / محتوا</label>
+        <textarea data-field="e-body" rows="4" placeholder="متن مقاله…">${e&&e.body?esc(e.body):''}</textarea></div>
+    </div>`;
+  const foot = `<button class="btn btn-ghost" data-action="close-modal">انصراف</button>
+    <button class="btn btn-primary" data-action="entry-save" data-id="${e?e.id:''}" data-new="${isNew?'1':'0'}">${I.check} ذخیره</button>`;
+  return modalShell(isNew?'مقاله جدید':'ویرایش مقاله', body, foot, true);
+}
+function buyerModal(name, phone, project){
+  const p = findProject(project);
+  const body = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div class="avatar" style="width:46px;height:46px;font-size:15px;">${esc(name.slice(0,2))}</div>
+      <div><div style="font-size:15px;font-weight:800;">${esc(name)}</div>
+        <div style="font-size:12px;color:var(--text-faint);">سرمایه‌گذار پروژه ${esc(p.name)}</div></div>
+      <span class="role-chip r-investor" style="margin-right:auto;">سرمایه‌گذار</span>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-cell"><div class="dc-k">شماره تماس</div><div class="dc-v" style="direction:ltr;">${esc(phone)}</div></div>
+      <div class="detail-cell"><div class="dc-k">پروژه</div><div class="dc-v" style="font-size:12px;">${esc(p.name)}</div></div>
+      <div class="detail-cell"><div class="dc-k">مرحله پروژه</div><div class="dc-v">${esc(p.currentStage)}</div></div>
+      <div class="detail-cell"><div class="dc-k">انبوه‌ساز</div><div class="dc-v" style="font-size:12px;">${esc(p.builder)}</div></div>
+    </div>`;
+  return modalShell('اطلاعات تماس خریدار', body,
+    `<button class="btn btn-ghost" data-action="close-modal">بستن</button>`, true);
+}
+function renderModal(){
+  const m = state.modal;
+  if(m.type==='builder'){ const b = BUILDERS.find(x=>x.id===m.id); return b? builderModal(b):''; }
+  if(m.type==='ticket'){ const t = TICKETS.find(x=>x.id===m.id); return t? ticketModal(t):''; }
+  if(m.type==='entry'){ return entryModal(m.id? ENTRIES.find(x=>x.id===m.id):null, m.extra==='new'); }
+  if(m.type==='buyer'){
+    const [pid, idx] = (m.id||'').split(':');
+    const b = (BUYERS[pid]||[])[+idx];
+    return b? buyerModal(b.n, b.p, pid):'';
+  }
+  if(m.type==='user'){ const u = USERS.find(x=>x.id===m.id); return u? userModal(u):''; }
+  if(m.type==='staff'){ return state.modal.extra==='new' ? staffModal(null,true) : (function(){ const st = STAFF.find(x=>x.id===m.id); return st? staffModal(st,false):''; })(); }
+  if(m.type==='suspend'){ const st = STAFF.find(x=>x.id===m.id); return st? suspendModal(st):''; }
+  if(m.type==='revise'){ const p = findProject(m.id); return p? reviseModal(p):''; }
+  if(m.type==='req'){ const r = findReq(m.id); if(!r) return ''; return state.modal.extra==='exec' ? execModal(r) : requestModal(r); }
+  if(m.type==='market'){ const m2 = findMkt(m.id); if(!m2) return '';
+    return state.modal.extra==='match' ? mktMatchModal(m2) : state.modal.extra==='settle' ? mktSettleModal(m2) : marketModal(m2); }
+  if(m.type==='release'){ const r = findRel(m.id); if(!r) return ''; return state.modal.extra==='exec' ? relExecModal(r) : releaseModal(r); }
+  if(m.type==='report'){ const r = REPORTS.find(x=>x.id===m.id); return r? reportModal(r):''; }
+  if(m.type==='kyc'){ const k = KYCS.find(x=>x.id===m.id); return k? kycModal(k):''; }
+  if(m.type==='notif'){ const n = NOTIFS.find(x=>x.id===m.id); return n? notifModal(n):''; }
+  if(m.type==='pass'){ return passModal(); }
+  return '';
+}
+function reviseModal(p){
+  const body = `
+    <div class="expert-box"><div class="ex-title">${I.warn} درخواست اصلاح پروژه</div>
+      <div class="ex-text">پروژه «${esc(p.name)}» به وضعیت «نیازمند اصلاح» تغییر می‌کند و دلیل برای انبوه‌ساز ارسال می‌شود.</div></div>
+    <div class="field" style="margin-top:16px;"><label>دلیل درخواست اصلاح</label>
+      <textarea data-field="revise-reason" rows="3" placeholder="مواردی که انبوه‌ساز باید اصلاح کند را شرح دهید."></textarea></div>`;
+  return modalShell('درخواست اصلاح از انبوه‌ساز', body,
+    `<button class="btn btn-ghost" data-action="close-modal">انصراف</button>
+     <button class="btn btn-primary" data-action="revise-submit" data-id="${p.id}">${I.send} ارسال درخواست</button>`, true);
+}
+
+/* ===================== SUPER-ADMIN MODALS ===================== */
+function userModal(u){
+  const status = badge(USER_STATUS, u.status);
+  const body = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div class="staff-av" style="background:var(--primary-light);color:var(--primary-dark);">${esc(u.name.charAt(0))}</div>
+      <div style="flex:1;"><div style="font-size:14px;font-weight:800;">${esc(u.name)}</div>
+        <div style="font-size:11.5px;color:var(--text-faint);margin-top:3px;">${roleChip(u.role)} کد ملی ${esc(u.national)} · عضویت ${esc(u.joined)}</div></div>
+      ${status}
+    </div>
+    <div class="detail-grid" style="margin-bottom:16px;">
+      <div class="detail-cell"><div class="dc-k">شماره تماس</div><div class="dc-v" style="direction:ltr;text-align:right;">${esc(u.phone)}</div></div>
+      <div class="detail-cell"><div class="dc-k">شهر</div><div class="dc-v">${esc(u.city)}</div></div>
+      <div class="detail-cell"><div class="dc-k">خشت‌های کاربر</div><div class="dc-v">${u.tokens? toFa(u.tokens)+' عدد':'—'}</div></div>
+      <div class="detail-cell"><div class="dc-k">احراز هویت</div><div class="dc-v">${badge(KYC_STATUS, u.kyc)}</div></div>
+    </div>
+    ${u.blockReason?`<div class="msg-bubble" style="margin-bottom:16px;border-color:#F0CFC9;color:var(--danger);">علت مسدودسازی: ${esc(u.blockReason)}${u.blockUntil?' — تا تاریخ '+esc(u.blockUntil):''}</div>`:''}
+    <div class="field"><label>سطح دسترسی کاربر</label>
+      <select data-field="u-role">
+        ${['investor','builder','expert','admin'].map(r=>`<option value="${r}" ${u.role===r?'selected':''}>${(ROLE_META[r]||{}).l}</option>`).join('')}
+      </select>
+      <div style="font-size:11px;color:var(--text-faint);margin-top:5px;">تغییر سطح دسترسی فقط توسط سوپر ادمین قابل انجام است.</div></div>
+    <div class="field" style="margin-top:14px;"><label>مدت مسدودسازی</label>
+      <select data-field="u-block-type">
+        <option value="blockedTemp">مسدودسازی موقت (۲۴ ساعت)</option>
+        <option value="blockedPerm">مسدودسازی دائم</option>
+      </select></div>
+    <div class="field" style="margin-top:14px;"><label>علت مسدودسازی یا تغییر سطح دسترسی</label>
+      <textarea data-field="u-reason" rows="3" placeholder="این علت در پروفایل کاربر ثبت و برای او ارسال می‌شود."></textarea></div>`;
+  const foot = `
+    ${u.status==='blockedTemp'||u.status==='blockedPerm'
+      ? `<button class="btn btn-soft" data-action="unblock-user" data-id="${u.id}">رفع مسدودسازی</button>`
+      : `<button class="btn btn-soft" style="color:var(--warning);" data-action="block-user" data-id="${u.id}">${I.lock} مسدودسازی حساب</button>`}
+    <button class="btn btn-ghost" data-action="close-modal">انصراف</button>
+    <button class="btn btn-primary" data-action="save-user" data-id="${u.id}">${I.check} ذخیره تغییرات</button>
+    <button class="btn btn-ghost" style="color:var(--danger);margin-right:auto;" data-action="del-user" data-id="${u.id}">${I.trash} حذف حساب</button>`;
+  return modalShell('مدیریت حساب کاربر', body, foot, true);
+}
+
+function staffModal(s, isNew){
+  const isNewRole = isNew && !state.staffPick;
+  const role = isNew ? (state.staffPick||'expert') : s.role;
+  const roleOpts = [
+    {k:'expert', t:'کارشناس', d:'بررسی پروژه‌ها، تأیید خرید خشت و پاسخ به تیکت‌ها'},
+    {k:'admin', t:'ادمین', d:'تأیید پروژه‌ها، تنظیم خشت و گزارش‌های مالی'},
+  ];
+  const body = `
+    <div class="role-picker" style="margin-bottom:16px;">
+      ${roleOpts.map(o=>`
+        <button type="button" class="role-opt ${role===o.k?'sel':''}" data-action="staff-pick" data-id="${o.k}">
+          <div class="ro-t">${o.t}</div><div class="ro-d">${o.d}</div></button>`).join('')}
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>نام و نام خانوادگی</label>
+        <input data-field="s-name" value="${esc(isNew?'':s.name)}" placeholder="مثلاً نگار سلطانی"></div>
+      <div class="field"><label>کد کارمندی اختصاصی</label>
+        <input data-field="s-emp" value="${esc(isNew? (role==='admin'?'ADM-':'EXP-')+String(STAFF.length+200).padStart(4,'0') : s.emp)}" style="direction:ltr;text-align:left;"></div>
+      <div class="field"><label>شماره تماس</label>
+        <input data-field="s-phone" value="${esc(isNew?'':s.phone)}" style="direction:ltr;text-align:left;" placeholder="09xxxxxxxxx"></div>
+      <div class="field"><label>ایمیل سازمانی</label>
+        <input data-field="s-email" value="${esc(isNew?'':s.email)}" style="direction:ltr;text-align:left;" placeholder="name@emarrat.ir"></div>
+    </div>
+    <div class="field" style="margin-top:14px;"><label>واحد / سمت</label>
+      <input data-field="s-dept" value="${esc(isNew?'':s.dept)}" placeholder="مثلاً کارشناس پروژه‌های مسکونی"></div>
+    <div class="field" style="margin-top:14px;"><label>رمز عبور اولیه</label>
+      <input data-field="s-pass" value="${esc(isNew?'':s.pass||'')}" style="direction:ltr;text-align:left;" placeholder="${isNew?'حداقل ۸ کاراکتر':''}"></div>
+    <div class="expert-box" style="margin-top:16px;"><div class="ex-title">${I.shield} تأیید دومرحله‌ای الزامی است</div>
+      <div class="ex-text">رمز عبور یکبار به کارمند پیامک می‌شود و او باید در اولین ورود کد تأیید دومرحله‌ای را فعال کند. ورود بدون کد یکبار‌مصرف ممکن نخواهد بود.</div></div>
+    ${isNew?'':`<div class="field" style="margin-top:14px;"><label>وضعیت حساب</label>
+      <select data-field="s-status">
+        <option value="active" ${s.status==='active'?'selected':''}>فعال</option>
+        <option value="suspended" ${s.status==='suspended'?'selected':''}>معلق</option>
+      </select></div>`}`;
+  const foot = `
+    <button class="btn btn-ghost" data-action="close-modal">انصراف</button>
+    <button class="btn btn-primary" data-action="staff-save" data-id="${isNew?'':s.id}" data-new="${isNew?'1':'0'}">${I.check} ${isNew?'ایجاد حساب کارمند':'ذخیره تغییرات'}</button>`;
+  return modalShell(isNew? 'افزودن کارمند جدید' : 'ویرایش حساب کارمند', body, foot, true);
+}
+
+function suspendModal(s){
+  const body = `
+    <div class="expert-box"><div class="ex-title">${I.warn} تعلیق حساب کارمند</div>
+      <div class="ex-text">حساب «${esc(s.name)}» (${esc(s.emp)}) موقتاً غیرفعال می‌شود و امکان ورود به پنل را نخواهد داشت.</div></div>
+    <div class="field" style="margin-top:16px;"><label>علت تعلیق</label>
+      <textarea data-field="sp-reason" rows="3" placeholder="علت تعلیق برای کارمند ارسال می‌شود."></textarea></div>`;
+  return modalShell('تعلیق حساب کارمند', body,
+    `<button class="btn btn-ghost" data-action="close-modal">انصراف</button>
+     <button class="btn btn-primary" style="background:var(--warning);" data-action="suspend-submit" data-id="${s.id}">تعلیق حساب</button>`, true);
+}
+/* ===================== EVENTS ===================== */
+function stamp(){ return '۱۴۰۳/۰۷/۱۸ — ۰۹:۳۰'; }
+function faToNum(s){ return String(s).replace(/[۰-۹]/g, d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); }
+function onlyDigits(s){ return faToNum(s).replace(/[^0-9]/g,''); }
+function refocus(field, val){
+  const el = document.querySelector('[data-field="'+field+'"]');
+  if(el){ el.focus(); try{ el.setSelectionRange(val.length, val.length); }catch(_){ } }
+}
+function bindEvents(){
+  const app = document.getElementById('app');
+  if(app._bound) return;
+  app._bound = true;
+
+  app.addEventListener('click', e=>{
+    const el = e.target.closest('[data-action]');
+    if(!el) return;
+    const a = el.dataset.action, id = el.dataset.id;
+    const modalEl = app.querySelector('.modal');
+    const fld = n => { const x = modalEl && modalEl.querySelector('[data-field="'+n+'"]'); return x ? x.value : ''; };
+
+    if(a==='close-modal-bg'){ if(e.target===el){ if(state.confirm){ state.confirm=null; } else { closeModal(); } render(); } return; }
+    if(a==='close-modal'){ closeModal(); state.confirm=null; render(); return; }
+    if(a==='confirm-no'){ state.confirm=null; render(); return; }
+    if(a==='confirm-yes'){ const c=state.confirm; state.confirm=null; if(c&&c.onConfirm) c.onConfirm(); render(); return; }
+
+    if(a==='nav' || a.indexOf('nav-')===0){
+      state.view = a==='nav' ? el.dataset.view : a.slice(4);
+      state.selectedProject=null; render(); return;
+    }
+    if(a==='back-projects'){ state.selectedProject=null; render(); return; }
+    if(a==='open-project'){ state.selectedProject=id; state.projectTab = findProject(id).status==='pending' ? 'settings':'overview'; render(); return; }
+    if(a==='project-tab'){ state.projectTab=el.dataset.tab; render(); return; }
+    if(a==='proj-tab'){ state.projStatus=el.dataset.tab; render(); return; }
+    if(a==='rel-tab'){ state.relTab=el.dataset.tab; render(); return; }
+    if(a==='rel-sub'){ state.relSub=el.dataset.tab; render(); return; }
+    if(a==='kyc-tab'){ state.kycTab=el.dataset.tab; render(); return; }
+    if(a==='notif-tab'){ state.notifTab=el.dataset.tab; render(); return; }
+    if(a==='acct-tab'){ state.acctTab=el.dataset.tab; render(); return; }
+    if(a==='builder-tab'){ state.builderTab=el.dataset.tab; render(); return; }
+    if(a==='ticket-tab'){ state.ticketTab=el.dataset.tab; render(); return; }
+    if(a==='content-tab'){ state.contentTab=el.dataset.tab; render(); return; }
+    if(a==='buyer-project'){ state.buyerProject=el.dataset.tab; render(); return; }
+
+    if(a==='open-builder'){ state.modal={type:'builder',id,extra:null}; render(); return; }
+    if(a==='open-ticket'){ state.modal={type:'ticket',id,extra:null}; render(); return; }
+    if(a==='open-buyer'){ state.modal={type:'buyer',id,extra:null}; render(); return; }
+    if(a==='open-release'){ state.modal={type:'release',id,extra:null}; render(); return; }
+    if(a==='open-report'){ state.modal={type:'report',id,extra:null}; render(); return; }
+    if(a==='open-kyc'){ state.modal={type:'kyc',id,extra:null}; render(); return; }
+    if(a==='notif-open'){ state.notifRead.add(id); state.modal={type:'notif',id,extra:null}; render(); return; }
+    if(a==='notif-read-all'){ NOTIFS.forEach(n=>state.notifRead.add(n.id)); showToast('همه اعلان‌ها خوانده شدند','info'); render(); return; }
+
+    if(a==='builder-approve' || a==='builder-reject'){
+      const b = BUILDERS.find(x=>x.id===id);
+      if(a==='builder-approve'){
+        modalEl.querySelectorAll('[data-field="b-doc"]').forEach(sel=>{ const d=b.docs.find(x=>x.n===sel.dataset.name); if(d) d.s=sel.value; });
+        const bad = b.docs.filter(d=>d.s==='rejected').length;
+        if(bad>0){ showToast(toFa(bad)+' مدرک رد شد — تأیید نهایی ممکن نشد','error'); return; }
+        b.status='approved'; showToast('انبوه‌ساز تأیید شد و می‌تواند پروژه ثبت کند');
+      } else {
+        const reason = fld('b-reason').trim();
+        if(!reason){ showToast('برای رد درخواست، ثبت دلیل الزامی است','error'); return; }
+        b.status='rejected'; b.reason=reason;
+        showToast('درخواست رد شد و دلیل برای کاربر ارسال شد','info');
+      }
+      closeModal(); render(); return;
+    }
+
+    if(a==='save-tokens'){
+      const p = findProject(id);
+      const cnt = onlyDigits(fld('token-count')), price = onlyDigits(fld('token-price'));
+      if(!cnt || +cnt < 1){ showToast('تعداد خشت‌ها باید عددی بزرگتر از صفر باشد','error'); return; }
+      if(!price || +price < 1000000){ showToast('قیمت هر خشت را به تومان وارد کنید (حداقل ۱ میلیون)','error'); return; }
+      if(p.sold > +cnt){ showToast('تعداد خشت نمی‌تواند کمتر از خشت‌های فروخته‌شده ('+toFa(p.sold)+' عدد) باشد','error'); return; }
+      p.totalTokens = +cnt; p.tokenPrice = +price; p.nextUpdate = fld('token-next-update').trim() || '۱۴۰۳/۰۸/۰۱';
+      if(p.status==='pending') p.status='active';
+      closeModal(); showToast('تنظیمات خشت پروژه ثبت و پروژه منتشر شد'); render(); return;
+    }
+    if(a==='update-price'){
+      const p = findProject(id), price = onlyDigits(fld('token-price'));
+      if(!price || +price < 1000000){ showToast('قیمت هر خشت را به تومان وارد کنید','error'); return; }
+      p.tokenPrice = +price; p.nextUpdate = fld('token-next-update').trim() || '۱۴۰۳/۰۸/۰۱';
+      closeModal(); showToast('قیمت هر خشت برای ماه جدید به‌روزرسانی شد'); render(); return;
+    }
+    if(a==='revise-project'){ state.modal={type:'revise',id,extra:null}; render(); return; }
+    if(a==='revise-submit'){
+      const p = findProject(id), reason = fld('revise-reason').trim();
+      if(!reason){ showToast('دلیل درخواست اصلاح را وارد کنید','error'); return; }
+      p.status='revision'; p.reviseReason = reason;
+      closeModal(); showToast('پروژه به حالت «نیازمند اصلاح» درآمد و به انبوه‌ساز اطلاع داده شد','info'); render(); return;
+    }
+
+    if(a==='ticket-reply'){
+      const t = TICKETS.find(x=>x.id===id), text = fld('tk-reply').trim();
+      if(!text){ showToast('متن پاسخ را وارد کنید','error'); return; }
+      t.msgs.push({from:ACCOUNT.name, me:true, t:stamp(), text});
+      t.status='answered'; t.time = stamp();
+      showToast('پاسخ ارسال شد'); render(); return;
+    }
+    if(a==='ticket-close'){
+      const t = TICKETS.find(x=>x.id===id);
+      t.status='closed'; closeModal(); showToast('تیکت بسته شد','info'); render(); return;
+    }
+
+    if(a==='new-entry'){ state.modal={type:'entry',id:null,extra:'new'}; render(); return; }
+    if(a==='edit-entry'){ state.modal={type:'entry',id,extra:null}; render(); return; }
+    if(a==='entry-save'){
+      const title = fld('e-title').trim(), cat = fld('e-cat'), st = fld('e-status'), body = fld('e-body').trim();
+      if(!title){ showToast('عنوان مقاله را وارد کنید','error'); return; }
+      if(el.dataset.new==='1'){
+        const nid = 'e'+(ENTRIES.length+1);
+        ENTRIES.push({id:nid, title, cat, status:st, views:0, date:'۱۴۰۳/۰۷/۱۸', body});
+        showToast('مقاله جدید در سایت منتشر شد');
+      } else {
+        const en = ENTRIES.find(x=>x.id===id);
+        if(en){ en.title=title; en.cat=cat; en.status=st; en.body=body; }
+        showToast('مقاله به‌روزرسانی شد');
+      }
+      closeModal(); render(); return;
+    }
+    if(a==='del-entry'){
+      const en = ENTRIES.find(x=>x.id===id);
+      showConfirm({title:'حذف مقاله', msg:'مقاله «'+en.title+'» از سایت حذف شود؟', confirmLabel:'حذف مقاله',
+        onConfirm:()=>{ ENTRIES.splice(ENTRIES.indexOf(en),1); showToast('مقاله حذف شد','info'); }});
+      return;
+    }
+
+    if(a==='req-tab'){ state.reqTab=el.dataset.tab; render(); return; }
+    if(a==='open-req'){ state.modal={type:'req',id,extra:null}; render(); return; }
+    if(a==='req-approve'){
+      const r = findReq(id);
+      r.status='approved';
+      showToast('درخواست '+r.ref+' تأیید شد — اکنون در مرحله انجام دستی قرار دارد');
+      closeModal(); render(); return;
+    }
+    if(a==='req-reject'){
+      const r = findReq(id), reason = fld('req-reason').trim();
+      if(!reason){ showToast('برای رد درخواست، ثبت دلیل الزامی است','error'); return; }
+      r.status='rejected'; r.reason=reason;
+      showToast('درخواست رد شد و دلیل آن برای کاربر ارسال شد','info');
+      closeModal(); render(); return;
+    }
+    if(a==='req-exec'){ state.modal.extra='exec'; render(); return; }
+    if(a==='modal-back'){ state.modal.extra=null; render(); return; }
+    if(a==='req-exec-save'){
+      const r = findReq(id), receipt = fld('ex-receipt').trim(), date = fld('ex-date').trim(), note = fld('ex-note').trim();
+      if(!receipt){ showToast('شماره رسید / فیش بانکی الزامی است','error'); return; }
+      if(!date){ showToast('تاریخ انجام را ثبت کنید','error'); return; }
+      r.exec = {by:ACCOUNT.name, receipt, date, note:note||'—'};
+      r.status='done';
+      showToast('رسید ثبت شد و درخواست '+r.ref+' تکمیل شد');
+      closeModal(); render(); return;
+    }
+    if(a==='mkt-tab'){ state.mktTab=el.dataset.tab; render(); return; }
+    if(a==='open-market'){ state.modal={type:'market',id,extra:null}; render(); return; }
+    if(a==='mkt-approve'){
+      const m = findMkt(id);
+      m.status='active';
+      showToast('عرضه تأیید و در بازار ثانویه فعال شد');
+      closeModal(); render(); return;
+    }
+    if(a==='mkt-reject'){
+      const m = findMkt(id), reason = fld('mkt-reason').trim();
+      if(!reason){ showToast('برای رد عرضه، ثبت دلیل الزامی است','error'); return; }
+      m.status='rejected'; m.reason=reason;
+      showToast('عرضه رد شد و دلیل آن برای فروشنده ارسال شد','info');
+      closeModal(); render(); return;
+    }
+    if(a==='mkt-match'){ state.modal={type:'market',id,extra:'match'}; render(); return; }
+    if(a==='mkt-match-save'){
+      const m = findMkt(id), buyer = fld('mk-buyer').trim(), date = fld('mk-date').trim();
+      if(!buyer){ showToast('نام خریدار را ثبت کنید','error'); return; }
+      m.buyer=buyer; m.date = date||stamp(); m.status='settle';
+      showToast('معامله ثبت شد — اکنون نیازمند تسویه دستی است');
+      closeModal(); render(); return;
+    }
+    if(a==='mkt-settle'){ state.modal={type:'market',id,extra:'settle'}; render(); return; }
+    if(a==='mkt-settle-save'){
+      const m = findMkt(id), receipt = fld('ms-receipt').trim(), date = fld('ms-date').trim(), note = fld('ms-note').trim();
+      if(!receipt){ showToast('شماره رسید / فیش واریز الزامی است','error'); return; }
+      m.exec = {by:ACCOUNT.name, receipt, date:date||stamp(), note:note||'—'};
+      m.status='done';
+      showToast('تسویه بازار ثانویه ثبت شد و خشت‌ها به خریدار منتقل گردید');
+      closeModal(); render(); return;
+    }
+    if(a==='rel-exec'){ state.modal.extra='exec'; render(); return; }
+    if(a==='rel-exec-save'){
+      const r = findRel(id), receipt = fld('rl-receipt').trim(), date = fld('rl-date').trim(), note = fld('rl-note').trim();
+      if(!receipt){ showToast('شماره رسید / فیش واریز الزامی است','error'); return; }
+      r.exec = {by:ACCOUNT.name, receipt, date:date||stamp(), note:note||'—'};
+      r.status='done';
+      showToast('رسید واریز ثبت شد و وجه مرحله «'+r.phase+'» آزاد شد');
+      closeModal(); render(); return;
+    }
+    if(a==='rel-approve' || a==='rel-reject' || a==='rel-hold'){
+      const r = RELEASES.find(x=>x.id===id), reason = fld('rel-reason').trim();
+      if(a==='rel-approve'){ r.status='approved'; showToast('آزادسازی وجه مرحله «'+r.phase+'» تأیید شد — اکنون در مرحله انجام دستی است'); }
+      else {
+        if(!reason){ showToast(a==='rel-hold'?'برای تعلیق درخواست، ثبت دلیل الزامی است':'برای رد درخواست، ثبت دلیل الزامی است','error'); return; }
+        r.status = a==='rel-hold' ? 'hold' : 'rejected'; r.note = reason;
+        showToast(a==='rel-hold'?'درخواست آزادسازی وجه معلق شد':'درخواست آزادسازی وجه رد شد','info');
+      }
+      closeModal(); render(); return;
+    }
+    if(a==='rp-approve' || a==='rp-reject'){
+      const rp = REPORTS.find(x=>x.id===id);
+      if(a==='rp-approve'){ rp.status='approved'; showToast('گزارش ماهانه تأیید شد'); }
+      else {
+        const reason = fld('rp-reason').trim();
+        if(!reason){ showToast('برای رد گزارش، ثبت دلیل الزامی است','error'); return; }
+        rp.status='rejected'; rp.reason=reason;
+        showToast('گزارش ماهانه رد شد','info');
+      }
+      closeModal(); render(); return;
+    }
+    if(a==='kyc-approve'){
+      const k = KYCS.find(x=>x.id===id);
+      modalEl.querySelectorAll('[data-field="kyc-doc"]').forEach(sel=>{ k.docs[+sel.dataset.idx].s = sel.value; });
+      const bad = k.docs.filter(d=>d.s==='rejected').length;
+      if(bad>0){ k.status='pending'; showToast(toFa(bad)+' مدرک رد شد — احراز هویت کامل نشد','error'); }
+      else { k.status='verified'; showToast('احراز هویت تأیید و حساب کاربر فعال شد'); }
+      closeModal(); render(); return;
+    }
+    if(a==='kyc-reject'){
+      const k = KYCS.find(x=>x.id===id), reason = fld('kyc-reason').trim();
+      if(!reason){ showToast('برای رد مدارک، ثبت دلیل الزامی است','error'); return; }
+      k.status='rejected'; k.reason=reason;
+      showToast('مدارک رد شد و دلیل برای کاربر ارسال شد','info'); closeModal(); render(); return;
+    }
+    if(a==='user-tab'){ state.userTab=el.dataset.tab; render(); return; }
+    if(a==='staff-tab'){ state.staffTab=el.dataset.tab; render(); return; }
+    if(a==='staff-pick'){ if(state.modal.extra==='new'){ state.staffPick=id; render(); } return; }
+    if(a==='open-user'){ state.modal={type:'user',id,extra:null}; render(); return; }
+    if(a==='new-staff'){ state.staffPick=null; state.modal={type:'staff',id:null,extra:'new'}; render(); return; }
+    if(a==='edit-staff'){ state.staffPick=null; state.modal={type:'staff',id,extra:null}; render(); return; }
+    if(a==='suspend-staff'){ state.modal={type:'suspend',id,extra:null}; render(); return; }
+
+    if(a==='staff-save'){
+      const name = fld('s-name').trim(), emp = fld('s-emp').trim(), phone = fld('s-phone').trim(),
+            email = fld('s-email').trim(), dept = fld('s-dept').trim(), pass = fld('s-pass');
+      if(!name || !emp || !phone || !email || !dept){ showToast('تمام فیلدها را پر کنید','error'); return; }
+      if(el.dataset.new==='1'){
+        if(!pass || pass.length<8){ showToast('رمز عبور اولیه باید حداقل ۸ کاراکتر باشد','error'); return; }
+        const role = state.staffPick || 'expert';
+        if(STAFF.some(x=>x.emp===emp)){ showToast('این کد کارمندی قبلاً ثبت شده است','error'); return; }
+        STAFF.push({id:'s'+(STAFF.length+1), name, role, emp, phone, email, dept, pass,
+          status:'active', twoFA:true, joined:'۱۴۰۳/۰۷/۱۸', lastLogin:'—'});
+        SEC_LOG.unshift({id:'l'+(SEC_LOG.length+1), sev:'high', who:ACCOUNT.name+' ('+ACCOUNT.emp+')',
+          act:'ایجاد حساب '+(role==='admin'?'ادمین':'کارشناس')+' جدید برای «'+name+'» با کد کارمندی '+emp, time:stamp(), ip:'۱۹۲٫۱۶۸٫۱٫۱۰'});
+        showToast('حساب کارمند جدید ایجاد شد و رمز اولیه برای او پیامک شد');
+      } else {
+        const s = STAFF.find(x=>x.id===id);
+        if(s){ s.name=name; s.emp=emp; s.phone=phone; s.email=email; s.dept=dept; s.status=fld('s-status');
+          if(pass) s.pass=pass; }
+        showToast('اطلاعات حساب کارمند به‌روزرسانی شد');
+      }
+      closeModal(); render(); return;
+    }
+    if(a==='suspend-submit'){
+      const s = STAFF.find(x=>x.id===id), reason = fld('sp-reason').trim();
+      if(!reason){ showToast('علت تعلیق را وارد کنید','error'); return; }
+      s.status='suspended'; s.suspendReason=reason;
+      SEC_LOG.unshift({id:'l'+(SEC_LOG.length+1), sev:'med', who:ACCOUNT.name+' ('+ACCOUNT.emp+')',
+        act:'تعلیق حساب کارمند «'+s.name+'» ('+s.emp+') — '+reason, time:stamp(), ip:'۱۹۲٫۱۶۸٫۱٫۱۰'});
+      closeModal(); showToast('حساب کارمند معلق شد','info'); render(); return;
+    }
+    if(a==='restore-staff'){
+      const s = STAFF.find(x=>x.id===id);
+      showConfirm({title:'رفع تعلیق', msg:'حساب «'+s.name+'» دوباره فعال شود؟', confirmLabel:'فعال‌سازی',
+        onConfirm:()=>{ s.status='active'; s.suspendReason=null; showToast('حساب کارمند فعال شد'); }});
+      return;
+    }
+    if(a==='del-staff'){
+      const s = STAFF.find(x=>x.id===id);
+      showConfirm({title:'حذف حساب کارمند', msg:'حساب «'+s.name+'» ('+s.emp+') به‌طور کامل حذف می‌شود و دیگر نمی‌تواند وارد پنل شود. ادامه می‌دهید؟', confirmLabel:'حذف حساب',
+        onConfirm:()=>{
+          SEC_LOG.unshift({id:'l'+(SEC_LOG.length+1), sev:'high', who:ACCOUNT.name+' ('+ACCOUNT.emp+')',
+            act:'حذف حساب کارمند «'+s.name+'» ('+s.emp+')', time:stamp(), ip:'۱۹۲٫۱۶۸٫۱٫۱۰'});
+          STAFF.splice(STAFF.indexOf(s),1); showToast('حساب کارمند حذف شد','info'); }});
+      return;
+    }
+
+    if(a==='block-user'){
+      const u = USERS.find(x=>x.id===id), reason = fld('u-reason').trim(), type = fld('u-block-type');
+      if(!reason){ showToast('ثبت علت مسدودسازی الزامی است','error'); return; }
+      u.status = type; u.blockReason = reason;
+      u.blockUntil = type==='blockedTemp' ? '۱۴۰۳/۰۷/۱۹' : null;
+      SEC_LOG.unshift({id:'l'+(SEC_LOG.length+1), sev:'high', who:ACCOUNT.name+' ('+ACCOUNT.emp+')',
+        act:(type==='blockedPerm'?'مسدودسازی دائم':'مسدودسازی موقت')+' حساب «'+u.name+'» — '+reason, time:stamp(), ip:'۱۹۲٫۱۶۸٫۱٫۱۰'});
+      closeModal(); showToast(type==='blockedPerm'?'حساب کاربر به‌طور دائم مسدود شد':'حساب کاربر به‌مدت ۲۴ ساعت مسدود شد','info'); render(); return;
+    }
+    if(a==='unblock-user'){
+      const u = USERS.find(x=>x.id===id);
+      showConfirm({title:'رفع مسدودسازی', msg:'حساب «'+u.name+'» دوباره فعال می‌شود؟', confirmLabel:'فعال‌سازی',
+        onConfirm:()=>{ u.status='active'; u.blockReason=null; u.blockUntil=null;
+          showToast('مسدودسازی حساب لغو شد'); }});
+      return;
+    }
+    if(a==='save-user'){
+      const u = USERS.find(x=>x.id===id), nr = fld('u-role'), reason = fld('u-reason').trim();
+      if(nr!==u.role){
+        SEC_LOG.unshift({id:'l'+(SEC_LOG.length+1), sev:'high', who:ACCOUNT.name+' ('+ACCOUNT.emp+')',
+          act:'تغییر سطح دسترسی «'+u.name+'» از «'+(ROLE_META[u.role]||{}).l+'» به «'+(ROLE_META[nr]||{}).l+'»', time:stamp(), ip:'۱۹۲٫۱۶۸٫۱٫۱۰'});
+        u.role = nr; showToast('سطح دسترسی کاربر تغییر کرد');
+      } else { showToast('اطلاعات حساب کاربر ذخیره شد'); }
+      closeModal(); render(); return;
+    }
+    if(a==='del-user'){
+      const u = USERS.find(x=>x.id===id);
+      showConfirm({title:'حذف حساب کاربر', msg:'حساب «'+u.name+'» و تمام اطلاعات مرتبط حذف می‌شود. این عمل قابل بازگشت نیست.', confirmLabel:'حذف قطعی',
+        onConfirm:()=>{
+          SEC_LOG.unshift({id:'l'+(SEC_LOG.length+1), sev:'high', who:ACCOUNT.name+' ('+ACCOUNT.emp+')',
+            act:'حذف حساب کاربر «'+u.name+'» (کد ملی '+u.national+')', time:stamp(), ip:'۱۹۲٫۱۶۸٫۱٫۱۰'});
+          u.status='deleted'; showToast('حساب کاربر حذف شد','info'); }});
+      return;
+    }
+    if(a==='sec-tgl'){
+      const key = el.dataset.key;
+      state.tgl[key] = !state.tgl[key];
+      if(key==='force2fa' && !state.tgl[key]) showToast('غیرفعال‌سازی تأیید دومرحله‌ای توصیه نمی‌شود','info');
+      else showToast(state.tgl[key]?'تنظیم امنیتی فعال شد':'تنظیم امنیتی غیرفعال شد', state.tgl[key]?'success':'info');
+      render(); return;
+    }
+    if(a==='tgl'){
+      const key = el.dataset.key;
+      state.tgl[key] = !state.tgl[key];
+      showToast(state.tgl[key]?'گزینه فعال شد':'گزینه غیرفعال شد','info'); render(); return;
+    }
+    if(a==='save-account'){ showToast('اطلاعات کارمندی ذخیره شد'); return; }
+    if(a==='chg-pass'){ state.modal={type:'pass',id:null,extra:null}; render(); return; }
+    if(a==='pass-save'){
+      const cur=fld('cur-pass'), np=fld('new-pass'), rp=fld('rep-pass');
+      if(!cur||!np||!rp){ showToast('تمام فیلدها را پر کنید','error'); return; }
+      if(np.length<8){ showToast('رمز عبور جدید باید حداقل ۸ کاراکتر باشد','error'); return; }
+      if(np!==rp){ showToast('تکرار رمز عبور با رمز جدید مطابقت ندارد','error'); return; }
+      closeModal(); showToast('رمز عبور با موفقیت تغییر کرد'); render(); return;
+    }
+  });
+
+  app.addEventListener('input', e=>{
+    const f = e.target.dataset && e.target.dataset.field;
+    if(f==='proj-search'){ state.projSearch = e.target.value; render(); refocus('proj-search', e.target.value); return; }
+    if(f==='req-search'){ state.reqSearch = e.target.value; render(); refocus('req-search', e.target.value); return; }
+    if(f==='user-search'){ state.userSearch = e.target.value; render(); refocus('user-search', e.target.value); return; }
+  });
+}
+
+render();
+</script>
+</body>
+</html>
